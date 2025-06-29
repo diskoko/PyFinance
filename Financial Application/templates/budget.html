@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💸 Budget Tracker - Financial App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    💸 Budget Tracker
+                </h1>
+                <div class="flex gap-2">
+                    <a href="{{ url_for('add_expense') }}" 
+                       class="bg-success text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-colors flex items-center gap-2 text-sm">
+                        ➕ Add Expense
+                    </a>
+                    <a href="{{ url_for('add_budget') }}" 
+                       class="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm">
+                        ➕ Add Budget
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Navigation -->
+        <nav class="mb-8">
+            <div class="flex flex-wrap gap-2 bg-white rounded-lg p-2 shadow-sm">
+                <a href="{{ url_for('home') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    🏠 Dashboard
+                </a>
+                <a href="{{ url_for('view_goals') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    🎯 Goals
+                </a>
+                <a href="{{ url_for('view_budget') }}" class="px-4 py-2 rounded-md bg-blue-100 text-blue-800 font-semibold flex items-center gap-2">
+                    💸 Budget
+                </a>
+                <a href="{{ url_for('view_journal') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    📓 Journal
+                </a>
+            </div>
+        </nav>
+
+        <!-- Current Month Display -->
+        <div class="mb-6">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">{{ current_month }}</h2>
+            <p class="text-gray-600">Track your spending and stay within budget</p>
+        </div>
+
+        {% if budget_data %}
+            <!-- Budget Overview Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {% set total_budgeted = budget_data | sum(attribute=2) %}
+                {% set total_spent = budget_data | sum(attribute=3) %}
+                {% set over_budget_count = budget_data | selectattr(3, '>', 'budget[2]') | list | length %}
+                
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">Total Budgeted</p>
+                            <p class="text-2xl font-bold text-gray-900">${{ '{:,.0f}'.format(total_budgeted) }}</p>
+                        </div>
+                        <div class="text-3xl">🎯</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">Total Spent</p>
+                            <p class="text-2xl font-bold {{ 'text-danger' if total_spent > total_budgeted else 'text-success' }}">
+                                ${{ '{:,.0f}'.format(total_spent) }}
+                            </p>
+                        </div>
+                        <div class="text-3xl">{{ '🔥' if total_spent > total_budgeted else '💚' }}</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">Remaining</p>
+                            <p class="text-2xl font-bold {{ 'text-danger' if total_spent > total_budgeted else 'text-success' }}">
+                                ${{ '{:,.0f}'.format(total_budgeted - total_spent) }}
+                            </p>
+                        </div>
+                        <div class="text-3xl">{{ '⚠️' if total_spent > total_budgeted else '✅' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Categories -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-bold text-gray-900">Your Budget Categories</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {% for budget in budget_data %}
+                    {% set percentage = (budget[3] / budget[2] * 100) if budget[2] > 0 else 0 %}
+                    {% set is_over = budget[3] > budget[2] %}
+                    {% set is_warning = percentage > 80 and not is_over %}
+                    
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                        <!-- Category Header -->
+                        <div class="px-6 py-4 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">
+                                        {% if budget[1].lower() == 'food' %}🍕
+                                        {% elif budget[1].lower() == 'transport' or budget[1].lower() == 'transportation' %}🚗
+                                        {% elif budget[1].lower() == 'entertainment' %}🎬
+                                        {% elif budget[1].lower() == 'shopping' %}🛍️
+                                        {% elif budget[1].lower() == 'housing' or budget[1].lower() == 'rent' %}🏠
+                                        {% elif budget[1].lower() == 'utilities' %}⚡
+                                        {% elif budget[1].lower() == 'healthcare' %}🏥
+                                        {% else %}💰
+                                        {% endif %}
+                                    </span>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900">{{ budget[1].title() }}</h4>
+                                        <p class="text-sm text-gray-600">
+                                            ${{ '{:,.0f}'.format(budget[3]) }} of ${{ '{:,.0f}'.format(budget[2]) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    {% if is_over %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Over Budget
+                                        </span>
+                                    {% elif is_warning %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Warning
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            On Track
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="px-6 py-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Progress</span>
+                                <span class="text-sm font-medium {{ 'text-danger' if is_over else 'text-gray-700' }}">
+                                    {{ '{:.0f}'.format(percentage) }}%
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="h-3 rounded-full transition-all duration-300 
+                                    {% if is_over %}bg-gradient-to-r from-red-400 to-red-600
+                                    {% elif is_warning %}bg-gradient-to-r from-yellow-400 to-yellow-500
+                                    {% else %}bg-gradient-to-r from-green-400 to-green-500
+                                    {% endif %}" 
+                                    style="width: {{ min(percentage, 100) }}%">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                {% if is_over %}
+                                    <p class="text-sm font-medium text-danger">
+                                        ${{ '{:,.0f}'.format(budget[3] - budget[2]) }} over budget
+                                    </p>
+                                {% else %}
+                                    <p class="text-sm font-medium text-success">
+                                        ${{ '{:,.0f}'.format(budget[2] - budget[3]) }} remaining
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Recent Expenses for this Category -->
+                        <div class="px-6 py-4 bg-gray-50">
+                            <h5 class="text-sm font-semibold text-gray-700 mb-3">Recent Expenses</h5>
+                            {% set category_expenses = recent_expenses | selectattr(4, 'equalto', budget[1]) | list %}
+                            {% if category_expenses %}
+                                <div class="space-y-2 max-h-32 overflow-y-auto">
+                                    {% for expense in category_expenses[:3] %}
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-gray-800 font-medium">{{ expense[0] }}</span>
+                                        <div class="text-right">
+                                            <span class="text-gray-900 font-semibold">${{ '{:,.0f}'.format(expense[1]) }}</span>
+                                            <span class="text-gray-500 block text-xs">{{ expense[3] }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% if category_expenses | length > 3 %}
+                                    <p class="text-xs text-gray-500 pt-1">
+                                        +{{ category_expenses | length - 3 }} more expenses
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <p class="text-sm text-gray-500 italic">No expenses yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Expenses Overview -->
+            {% if recent_expenses %}
+            <div class="mt-12">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">All Recent Expenses</h3>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="divide-y divide-gray-100">
+                        {% for expense in recent_expenses[:10] %}
+                        <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl">
+                                    {% if expense[2].lower() == 'food' %}🍕
+                                    {% elif expense[2].lower() == 'transport' or expense[2].lower() == 'transportation' %}🚗
+                                    {% elif expense[2].lower() == 'entertainment' %}🎬
+                                    {% elif expense[2].lower() == 'shopping' %}🛍️
+                                    {% elif expense[2].lower() == 'housing' or expense[2].lower() == 'rent' %}🏠
+                                    {% elif expense[2].lower() == 'utilities' %}⚡
+                                    {% elif expense[2].lower() == 'healthcare' %}🏥
+                                    {% else %}💰
+                                    {% endif %}
+                                </span>
+                                <div>
+                                    <p class="font-semibold text-gray-900">{{ expense[0] }}</p>
+                                    <p class="text-sm text-gray-600">{{ expense[2].title() }}{% if expense[4] %} • {{ expense[4].title() }}{% endif %}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-gray-900">${{ '{:,.2f}'.format(expense[1]) }}</p>
+                                <p class="text-sm text-gray-500">{{ expense[3] }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-16">
+                <div class="text-6xl mb-4">💸</div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">No Budgets Yet</h3>
+                <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                    Start tracking your spending by creating your first budget category. It's the first step to financial freedom!
+                </p>
+                <a href="{{ url_for('add_budget') }}" 
+                   class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors inline-flex items-center gap-2">
+                    ➕ Create Your First Budget
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="fixed bottom-6 right-6 bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow border" aria-label="Toggle dark/light mode">
+        <span class="sun-icon text-xl">☀️</span>
+        <span class="moon-icon text-xl hidden">🌙</span>
+    </button>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

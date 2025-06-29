@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Goal - Financial App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <!-- Financial Status Overview Widget -->
+            <div class="sidebar-financial-overview">
+                <div class="financial-status-icon" id="sidebar-status-icon">💼</div>
+                <div class="financial-status-text" id="sidebar-status-text">Loading...</div>
+                <div class="financial-quick-stats">
+                    <div class="quick-stat">
+                        <span class="quick-stat-value" id="sidebar-goals-completed">-</span>
+                        <span class="quick-stat-label">Goals</span>
+                    </div>
+                    <div class="quick-stat">
+                        <span class="quick-stat-value" id="sidebar-budget-status">-</span>
+                        <span class="quick-stat-label">Budget</span>
+                    </div>
+                    <div class="quick-stat">
+                        <span class="quick-stat-value" id="sidebar-recent-activity">-</span>
+                        <span class="quick-stat-label">Activity</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('view_goals') }}" class="active">Goals</a></li>
+                    <li><a href="{{ url_for('view_budget') }}">Budget</a></li>
+                    <li><a href="{{ url_for('view_journal') }}">Journal</a></li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="quick-action-buttons">
+                    <a href="{{ url_for('add_goal') }}" class="quick-action-btn">➕ Add Goal</a>
+                    <a href="{{ url_for('add_expense') }}" class="quick-action-btn secondary">💸 Add Expense</a>
+                    <a href="{{ url_for('add_entry') }}" class="quick-action-btn">📝 Journal Entry</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <h1>Edit Financial Goal</h1>
+            
+            <form method="POST" action="{{ url_for('edit_goal', goal_id=goal[0]) }}" class="goal-form">
+                <div class="form-group">
+                    <label for="name">Goal Name</label>
+                    <input type="text" id="name" name="name" value="{{ goal[1] }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="target_amount">Target Amount ($)</label>
+                    <input type="number" id="target_amount" name="target_amount" step="0.01" value="{{ goal[2] }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deadline">Target Date</label>
+                    <input type="date" id="deadline" name="deadline" value="{{ goal[4] }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="savings" {{ 'selected' if goal[5] == 'savings' else '' }}>Savings</option>
+                        <option value="emergency" {{ 'selected' if goal[5] == 'emergency' else '' }}>Emergency Fund</option>
+                        <option value="investment" {{ 'selected' if goal[5] == 'investment' else '' }}>Investment</option>
+                        <option value="debt" {{ 'selected' if goal[5] == 'debt' else '' }}>Debt Repayment</option>
+                        <option value="purchase" {{ 'selected' if goal[5] == 'purchase' else '' }}>Major Purchase</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description">{{ goal[6] if goal[6] else '' }}</textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">Update Goal</button>
+                    <a href="{{ url_for('view_goals') }}" class="cancel-btn">Cancel</a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">
+            <span class="sun-icon">☀️</span>
+            <span class="moon-icon">🌙</span>
+        </button>
+    </div>
+    
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+</body>
+</html>

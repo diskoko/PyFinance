@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Financial Goal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <!-- Keep existing navigation -->
+        </div>
+        
+        <div class="main-content">
+            <h1>Add New Financial Goal</h1>
+            
+            <form method="POST" action="{{ url_for('add_goal') }}" class="goal-form">
+                <div class="form-group">
+                    <label for="name">Goal Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="target_amount">Target Amount</label>
+                    <input type="number" id="target_amount" name="target_amount" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deadline">Target Date</label>
+                    <input type="date" id="deadline" name="deadline" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="savings">Savings</option>
+                        <option value="emergency">Emergency Fund</option>
+                        <option value="investment">Investment</option>
+                        <option value="debt">Debt Repayment</option>
+                        <option value="purchase">Major Purchase</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description"></textarea>
+                </div>
+                
+                <button type="submit">Create Goal</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

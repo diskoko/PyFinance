@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Entries</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <!-- Calendar -->
+            <div class="calendar" role="region" aria-label="Calendar">
+                <div class="month">
+                    <ul>
+                        <li class="prev" onclick="prevMonth()">&#10094;</li>
+                        <li class="next" onclick="nextMonth()">&#10095;</li>
+                        <li id="monthYear"></li>
+                    </ul>
+                </div>
+                <ul class="weekdays">
+                    <li>Mo</li>
+                    <li>Tu</li>
+                    <li>We</li>
+                    <li>Th</li>
+                    <li>Fr</li>
+                    <li>Sa</li>
+                    <li>Su</li>
+                </ul>
+                <ul class="days">
+                    {% for day in days %}
+                        <li class="{{ 'entry-day' if day in entry_days else '' }}">{{ day }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <!-- Navigation -->
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('view_goals') }}">Goals</a></li>
+                    <li><a href="{{ url_for('view_journal') }}">Journal</a></li>
+                    <li><a href="{{ url_for('add_goal') }}">Add Goal</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <h1>Journal Entries</h1>
+            
+            <!-- New Entry Form -->
+            <form method="POST" action="{{ url_for('add_entry') }}" class="journal-entry-form">
+                <input type="text" name="title" placeholder="Entry Title" required>
+                <textarea name="content" placeholder="Write your thoughts..." required></textarea>
+                <input type="hidden" name="date" value="{{ current_date }}">
+                <button type="submit">Save Entry</button>
+            </form>
+
+            <!-- Entries List -->
+            <div class="entries-grid">
+                {% for entry in entries %}
+                <div class="entry-box">
+                    <h2>{{ entry[1] }}</h2>
+                    <p class="entry-date">{{ entry[4] }}</p>
+                    <p class="entry-preview">{{ entry[2]|truncate(150) }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

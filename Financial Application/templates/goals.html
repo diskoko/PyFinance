@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Goals</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('view_goals') }}">Goals</a></li>
+                    <li><a href="{{ url_for('view_journal') }}">Journal</a></li>
+                    <li><a href="{{ url_for('add_goal') }}">Add Goal</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="main-content">
+            <h1>Your Financial Goals</h1>
+            <div class="goals-grid">
+                {% for goal in goals %}
+                <div class="goal-card">
+                    <h3>{{ goal[1] }}</h3>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress" style="width: {{ goal[8]|round }}%"></div>
+                        </div>
+                        <p class="progress-text">{{ goal[8]|round }}% Complete</p>
+                    </div>
+                    <div class="goal-details">
+                        <p><strong>Current:</strong> ${{ goal[3]|round(2) }}</p>
+                        <p><strong>Target:</strong> ${{ goal[2]|round(2) }}</p>
+                        <p><strong>Category:</strong> {{ goal[5]|title }}</p>
+                        <p><strong>Deadline:</strong> {{ goal[4] }}</p>
+                        {% if goal[6] %}
+                            <p><strong>Description:</strong> {{ goal[6] }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <form class="update-form" data-goal-id="{{ goal[0] }}">
+                        <div class="form-group">
+                            <input type="number" step="0.01" name="amount" placeholder="Amount" required>
+                            <select name="type" required>
+                                <option value="deposit">Add Money</option>
+                                <option value="withdrawal">Remove Money</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="note" placeholder="Add a note (optional)">
+                        </div>
+                        <button type="submit">Update Progress</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
