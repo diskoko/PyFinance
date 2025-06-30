@@ -27,14 +27,37 @@
         .btn-success:hover { background: linear-gradient(135deg, #0e8478 0%, #32d96b 100%); transform: translateY(-1px); }
         .btn-blue { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); }
         .btn-blue:hover { background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%); transform: translateY(-1px); }
+        
+        /* Calendar Day Styling */
         .calendar-day { 
-            width: 32px; height: 32px; 
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 8px; cursor: pointer; transition: all 0.2s;
+            width: 30px; 
+            height: 30px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
         }
-        .calendar-day:hover { background: #f3f4f6; }
-        .calendar-day.active { background: #667eea; color: white; }
-        .calendar-day.has-entry { background: #dcfce7; color: #166534; font-weight: 500; }
+        .calendar-day:hover { 
+            background: #f3f4f6; 
+        }
+        .calendar-day.current-day { 
+            background: #3b82f6; 
+            color: white; 
+        }
+        .calendar-day.has-entry { 
+            background: #dcfce7; 
+            color: #166534; 
+        }
+        .calendar-day.selected {
+            background: #667eea;
+            color: white;
+        }
+        
         .focus-card { background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); }
     </style>
 </head>
@@ -103,35 +126,20 @@
                     </div>
 
                     <!-- Calendar Widget -->
-                    <div class="card p-6">
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="text-lg">📅</span>
-                            <h2 class="font-semibold text-gray-900">Calendar</h2>
-                        </div>
-                        <div class="calendar">
-                            <div class="flex items-center justify-between mb-4">
-                                <button onclick="prevMonth()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                                    </svg>
-                                </button>
-                                <h3 id="monthYear" class="font-semibold text-gray-900"></h3>
-                                <button onclick="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </button>
+                    <div class="bg-white rounded-xl shadow p-4 mb-6">
+                        <h3 class="font-bold text-gray-800 mb-3">📅 Calendar</h3>
+                        <div class="calendar" role="region" aria-label="Calendar">
+                            <div class="month mb-2">
+                                <div class="flex items-center justify-between">
+                                    <button class="text-2xl hover:bg-gray-100 p-1 rounded" onclick="prevMonth()">&#10094;</button>
+                                    <div id="monthYear" class="font-bold text-lg text-center flex-1"></div>
+                                    <button class="text-2xl hover:bg-gray-100 p-1 rounded" onclick="nextMonth()">&#10095;</button>
+                                </div>
                             </div>
-                            <div class="grid grid-cols-7 gap-1 mb-2">
-                                <div class="text-xs font-medium text-gray-500 text-center py-2">Mo</div>
-                                <div class="text-xs font-medium text-gray-500 text-center py-2">Tu</div>
-                                <div class="text-xs font-medium text-gray-500 text-center py-2">We</div>
-                                <div class="text-xs font-medium text-gray-500 text-center py-2">Th</div>
-                                <div class="text-xs font-medium text-gray-500 text-center py-2">Fr</div>
-                                <div class="text-xs font-medium text-gray-500 text-center py-2">Sa</div>
-                                <div class="text-xs font-medium text-gray-500 text-center py-2">Su</div>
+                            <div class="grid grid-cols-7 gap-1 text-xs text-gray-500 mb-2 text-center">
+                                <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
                             </div>
-                            <div id="calendarDays" class="grid grid-cols-7 gap-1"></div>
+                            <div class="days grid grid-cols-7 gap-1"></div>
                         </div>
                     </div>
 
@@ -139,15 +147,18 @@
                     <div class="card p-6">
                         <h3 class="font-semibold text-gray-900 mb-4">Quick Actions</h3>
                         <div class="space-y-3">
-                            <button onclick="document.getElementById('title').focus()" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium">
-                                + Add Goal
-                            </button>
-                            <button onclick="document.getElementById('title').focus()" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors font-medium">
-                                + Add Expense
-                            </button>
-                            <button onclick="document.getElementById('title').focus()" class="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium">
-                                📝 Journal Entry
-                            </button>
+                            <a href="{{ url_for('add_goal') }}" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2 justify-center">
+                                ➕ Add Goal
+                            </a>
+                            <a href="{{ url_for('add_expense') }}" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2 justify-center">
+                                💸 Add Expense
+                            </a>
+                            <a href="{{ url_for('add_budget') }}" class="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium flex items-center gap-2 justify-center">
+                                ➕ Add Budget
+                            </a>
+                            <a href="{{ url_for('add_entry') }}" class="w-full bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors font-medium flex items-center gap-2 justify-center">
+                                📝 Add Journal Entry
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -169,7 +180,7 @@
                             <span class="text-2xl">📝</span>
                             Write Journal Entry
                         </h2>
-                        <form action="{{ url_for('add_entry') }}" method="post" class="space-y-4">
+                        <form id="journalForm" action="{{ url_for('add_entry') }}" method="post" class="space-y-4">
                             <div>
                                 <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Entry Title</label>
                                 <input type="text" id="title" name="title" 
@@ -193,15 +204,14 @@
                     </div>
 
                     <!-- Journal Entries -->
-                    <div class="space-y-4">
+                    <div class="space-y-4" id="entriesList">
                         <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                             <span class="text-2xl">📚</span>
                             Recent Entries
                             <span class="text-sm text-gray-500 font-normal">({{ entries|length if entries else 0 }} total)</span>
                         </h2>
-                        
                         {% for entry in entries %}
-                        <div class="card p-6 hover:shadow-lg transition-all duration-200">
+                        <div class="card p-6 hover:shadow-lg transition-all duration-200 entry-item" id="entry-{{ entry[0] }}">
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -209,22 +219,21 @@
                                     </div>
                                     <div>
                                         <h3 class="font-semibold text-gray-900 text-lg">{{ entry[1] }}</h3>
-                                        <p class="text-sm text-gray-500">{{ entry[4] if entry[4] else entry[2] }}</p>
+                                        <p class="text-sm text-gray-500">{{ entry[4] if entry[4] else entry[3] }}</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <button onclick="editEntry({{ entry[0] }})" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">
+                                    <button onclick="editEntry('{{ entry[0] }}')" type="button" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">
                                         Edit
                                     </button>
-                                    <button onclick="deleteEntry({{ entry[0] }})" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">
+                                    <button onclick="deleteEntry('{{ entry[0] }}')" type="button" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">
                                         Delete
                                     </button>
                                 </div>
                             </div>
-                            <div class="text-gray-700 leading-relaxed whitespace-pre-line pl-13">{{ entry[3] }}</div>
+                            <div class="text-gray-700 leading-relaxed whitespace-pre-line pl-13">{{ entry[2] }}</div>
                         </div>
                         {% endfor %}
-                        
                         {% if not entries %}
                         <div class="card p-12 text-center">
                             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -244,57 +253,68 @@
     </main>
 
     <script>
-        // Calendar functionality
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        
+        // Calendar variables
+        const currentDate = new Date();
+        let selectedDate = new Date();
+        const entryDays = [];
+
         function renderCalendar() {
-            const monthNames = ["January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"];
-            
-            document.getElementById('monthYear').textContent = `${monthNames[currentMonth]} ${currentYear}`;
-            
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            const today = new Date();
-            
-            let calendarHTML = '';
-            
-            // Empty cells for days before month starts
-            for (let i = 1; i < firstDay; i++) {
-                calendarHTML += '<div></div>';
+            const monthYearDisplay = document.getElementById('monthYear');
+            const daysContainer = document.querySelector('.calendar .days');
+            daysContainer.innerHTML = '';
+
+            const month = selectedDate.getMonth();
+            const year = selectedDate.getFullYear();
+            monthYearDisplay.innerHTML = `${selectedDate.toLocaleString('default', { month: 'long' })} ${year}`;
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+            const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < adjustedFirstDay; i++) {
+                const emptyDay = document.createElement('div');
+                daysContainer.appendChild(emptyDay);
             }
-            
-            // Days of the month
-            for (let day = 1; day <= daysInMonth; day++) {
-                const isToday = today.getDate() === day && 
-                               today.getMonth() === currentMonth && 
-                               today.getFullYear() === currentYear;
-                
-                const classes = `calendar-day text-sm ${isToday ? 'active' : ''}`;
-                calendarHTML += `<div class="${classes}">${day}</div>`;
+
+            // Create day elements
+            for (let i = 1; i <= lastDateOfMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.innerHTML = i;
+                dayElement.className = 'calendar-day';
+                if (i === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
+                    dayElement.classList.add('current-day');
+                }
+                if (entryDays.includes(i)) {
+                    dayElement.classList.add('has-entry');
+                }
+                dayElement.onclick = (event) => selectDate(i, event);
+                daysContainer.appendChild(dayElement);
             }
-            
-            document.getElementById('calendarDays').innerHTML = calendarHTML;
         }
-        
+
+        function selectDate(day, event) {
+            document.querySelectorAll('.calendar-day.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            selectedDate.setDate(day);
+            // Add any date-specific logic here
+        }
+
         function prevMonth() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
+            selectedDate.setMonth(selectedDate.getMonth() - 1);
             renderCalendar();
         }
-        
+
         function nextMonth() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
+            selectedDate.setMonth(selectedDate.getMonth() + 1);
             renderCalendar();
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCalendar();
+        });
 
         // Entry actions
         function editEntry(entryId) {
@@ -311,19 +331,64 @@
             }
         }
 
-        // Initialize calendar on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            renderCalendar();
-        });
-
         // Auto-resize textarea
         document.getElementById('content').addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = this.scrollHeight + 'px';
         });
+
+        // AJAX for journal entry form
+        const journalForm = document.getElementById('journalForm');
+        journalForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(journalForm);
+            const response = await fetch(journalForm.action, {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                const newEntry = await response.json();
+                addEntryToList(newEntry);
+                journalForm.reset();
+                document.getElementById('title').focus();
+            } else {
+                alert('Failed to add entry.');
+            }
+        });
+
+        function addEntryToList(entry) {
+            const entriesList = document.getElementById('entriesList');
+            // Remove 'no entries' card if present
+            const noEntries = entriesList.querySelector('.card.p-12');
+            if (noEntries) noEntries.remove();
+            // Create new entry card
+            const div = document.createElement('div');
+            div.className = 'card p-6 hover:shadow-lg transition-all duration-200 entry-item';
+            div.id = `entry-${entry.id}`;
+            div.style.opacity = 0;
+            div.innerHTML = `
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-lg">📝</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 text-lg">${entry.title}</h3>
+                            <p class="text-sm text-gray-500">${entry.date}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="editEntry(${entry.id})" type="button" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">Edit</button>
+                        <button onclick="deleteEntry(${entry.id})" type="button" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">Delete</button>
+                    </div>
+                </div>
+                <div class="text-gray-700 leading-relaxed whitespace-pre-line pl-13">${entry.content}</div>
+            `;
+            entriesList.insertBefore(div, entriesList.children[1]);
+            setTimeout(() => { div.style.transition = 'opacity 0.5s'; div.style.opacity = 1; }, 10);
+        }
     </script>
 
-    <script src="{{ url_for('static', filename='journal_calendar.js') }}"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

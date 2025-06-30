@@ -117,6 +117,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <!-- Sidebar -->
             <aside class="lg:col-span-1">
+                
+
                 <div class="bg-white rounded-xl shadow p-4 mb-6">
                     <div class="financial-status-overview">
                         <div class="text-center mb-4">
@@ -139,7 +141,11 @@
                         </div>
                     </div>
                 </div>
-                
+                <!-- Total Balance Card -->
+                <div class="bg-gradient-to-r from-blue-500 to-green-400 text-white rounded-xl shadow p-6 mb-6 flex flex-col items-center">
+                    <div class="text-lg font-semibold mb-1">Total Balance</div>
+                    <div class="text-3xl font-extrabold tracking-tight">${{ '%.2f' % (total_balance | default(0) | float) }}</div>
+                </div>
                 <div class="bg-white rounded-xl shadow p-4 mb-6">
                     <h3 class="font-bold text-gray-800 mb-3">📅 Calendar</h3>
                     <div class="calendar" role="region" aria-label="Calendar">
@@ -161,13 +167,13 @@
                 <div class="bg-white rounded-xl shadow p-4">
                     <h3 class="font-bold text-gray-800 mb-3">Quick Actions</h3>
                     <div class="space-y-2">
-                        <button onclick="showAddGoalModal()" class="w-full bg-primary text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+                        <button onclick="window.location.href='{{ url_for('add_goal') }}'"  class="w-full bg-primary text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
                             ➕ Add Goal
                         </button>
-                        <button onclick="showAddExpenseModal()" class="w-full bg-success text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+                        <button onclick="window.location.href='{{ url_for('add_expense') }}'" class="w-full bg-success text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
                             💸 Add Expense
                         </button>
-                        <button onclick="showAddJournalModal()" class="w-full bg-warning text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors">
+                        <button onclick="window.location.href='{{ url_for('view_journal') }}'" class="w-full bg-warning text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors">
                             📝 Journal Entry
                         </button>
                     </div>
@@ -176,6 +182,7 @@
 
             <!-- Main Content -->
             <main class="lg:col-span-3">
+                <!-- Financial Overview -->
                 <div class="bg-white rounded-xl shadow p-6 mb-6">
                     <h2 class="text-3xl font-bold text-gray-900 mb-4">Financial Overview</h2>
                     <div class="text-center mb-6">
@@ -188,25 +195,25 @@
                 <section class="bg-white rounded-xl shadow p-6 mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Financial Goals</h2>
                     <div id="goals-container">
-                        <!-- Sample Goal -->
+                        {% if goals %}
+                        {% for goal in goals %}
                         <div class="goal-card bg-gray-50 p-4 rounded-lg mb-4">
                             <div class="flex justify-between items-start mb-3">
-                                <h3 class="text-lg font-semibold text-gray-800">Eric Gender insurance</h3>
-                                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">Emergency</span>
+                                <h3 class="text-lg font-semibold text-gray-800">{{ goal[1] }}</h3>
+                                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">{{ goal[5]|title }}</span>
                             </div>
                             <div class="mb-3">
                                 <div class="flex justify-between text-sm text-gray-600 mb-1">
                                     <span>Progress</span>
-                                    <span>Due: 2025-07-20</span>
+                                    <span>Due: {{ goal[4] }}</span>
                                 </div>
                                 <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="progress-fill bg-green-500 h-2 rounded-full" style="width: 60%"></div>
+                                    <div class="progress-fill bg-green-500 h-2 rounded-full" style="width: {{ (goal[3]/goal[2]*100)|round(1) }}%"></div>
                                 </div>
-                                <div class="text-sm text-gray-600 mt-1">$300,520.00 / $500,000.00 (60%)</div>
+                                <div class="text-sm text-gray-600 mt-1">${{ goal[3]|round(2) }} / ${{ goal[2]|round(2) }} ({{ (goal[3]/goal[2]*100)|round(1) }}%)</div>
                             </div>
-                            
                             <!-- Quick Update Form -->
-                            <form class="update-form flex gap-2" data-goal-id="1">
+                            <form class="update-form flex gap-2" data-goal-id="{{ goal[0] }}">
                                 <input type="number" step="0.01" name="amount" placeholder="Amount" 
                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" required>
                                 <select name="type" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" required>
@@ -218,6 +225,10 @@
                                 </button>
                             </form>
                         </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center text-gray-500">No financial goals yet.</div>
+                        {% endif %}
                     </div>
                 </section>
                 
@@ -225,26 +236,19 @@
                 <section class="bg-white rounded-xl shadow p-6 mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Updates</h2>
                     <div class="space-y-3" id="transactions-list">
-                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                            <span class="text-sm text-gray-600">2025-06-30</span>
-                            <span class="font-medium text-green-600">+$20.0</span>
-                            <span class="text-sm text-gray-800">Eric Gender insurance</span>
+                        {% if transactions %}
+                        {% for tx in transactions %}
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100{% if loop.last %} border-b-0{% endif %}">
+                            <span class="text-sm text-gray-600">{{ tx[0] }}</span>
+                            <span class="font-medium {% if tx[1] >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {% if tx[1] >= 0 %}+{% endif %}${{ tx[1]|abs|round(2) }}
+                            </span>
+                            <span class="text-sm text-gray-800">{{ tx[3] }}</span>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                            <span class="text-sm text-gray-600">2025-06-30</span>
-                            <span class="font-medium text-green-600">+$100,000.0</span>
-                            <span class="text-sm text-gray-800">Eric Gender insurance</span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                            <span class="text-sm text-gray-600">2025-06-30</span>
-                            <span class="font-medium text-red-600">-$30,000.0</span>
-                            <span class="text-sm text-gray-800">Eric Gender insurance</span>
-                        </div>
-                        <div class="flex justify-between items-center py-2">
-                            <span class="text-sm text-gray-600">2025-06-30</span>
-                            <span class="font-medium text-red-600">-$40,000.0</span>
-                            <span class="text-sm text-gray-800">Eric Gender insurance</span>
-                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center text-gray-500">No recent transactions.</div>
+                        {% endif %}
                     </div>
                 </section>
                 
@@ -396,15 +400,23 @@
 
         // Handle goal updates
         document.querySelectorAll('.update-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const goalId = this.dataset.goalId;
                 const formData = new FormData(this);
-                const amount = formData.get('amount');
-                const type = formData.get('type');
-                
-                showNotification('success', `Goal ${goalId} updated: ${type} $${amount}`);
-                this.reset();
+                try {
+                    const response = await fetch(`/update_goal/${goalId}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        showNotification('error', 'Error updating goal. Please try again.');
+                    }
+                } catch (error) {
+                    showNotification('error', 'Error updating goal. Please try again.');
+                }
             });
         });
 

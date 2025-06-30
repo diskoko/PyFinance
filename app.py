@@ -71,13 +71,17 @@ def home():
     
     with sqlite3.connect('finance.db') as conn:
         cursor = conn.cursor()
-        # Get financial goals
+        # Get financial goals (include transaction count and progress percent for consistency with goals page)
         cursor.execute("""
-            SELECT id, name, target_amount, current_amount, deadline, category 
-            FROM financial_goals 
+            SELECT g.*, 
+                   (SELECT COUNT(*) FROM transactions WHERE goal_id = g.id) as transaction_count,
+                   (g.current_amount / g.target_amount * 100) as progress_percent
+            FROM financial_goals g
             ORDER BY deadline ASC
         """)
         goals = cursor.fetchall()
+        # Calculate total balance from goals
+        total_balance = sum(goal[3] for goal in goals)  # goal[3] is current_amount
         
         # Get recent transactions
         cursor.execute("""
@@ -121,7 +125,8 @@ def home():
                           budget_overview=budget_overview,
                           goal_score=goal_score,
                           entry_days=days_with_entries,
-                          current_date=today)
+                          current_date=today,
+                          total_balance=total_balance)
 
 @app.route('/add_goal', methods=['GET', 'POST'])
 def add_goal():
@@ -193,25 +198,30 @@ def view_entries():
         entries = cursor.fetchall()
     return render_template('view_entries.html', entries=entries)
 
-@app.route('/add_entry', methods=['GET', 'POST'])
+@app.route('/add_entry', methods=['POST'])
 def add_entry():
-    """Add a new journal entry"""
-    if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content']
-        date = request.form['date']
-        
-        with sqlite3.connect('finance.db') as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO journal (title, content, date)
-                VALUES (?, ?, ?)
-            """, (title, content, date))
-            conn.commit()
-        
-        return redirect(url_for('view_entries'))
-    
-    return render_template('add_entry.html')
+    """Add a new journal entry (AJAX/JSON or fallback)"""
+    title = request.form['title']
+    content = request.form['content']
+    date = request.form['date']
+    with sqlite3.connect('finance.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO journal (title, content, date)
+            VALUES (?, ?, ?)
+        """, (title, content, date))
+        conn.commit()
+        entry_id = cursor.lastrowid
+    # If AJAX, return JSON for frontend animation
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'id': entry_id,
+            'title': title,
+            'content': content,
+            'date': date
+        })
+    # Otherwise, fallback to journal page
+    return redirect(url_for('view_journal'))
 
 @app.route('/goals')
 def view_goals():
@@ -226,8 +236,9 @@ def view_goals():
             ORDER BY deadline ASC
         """)
         goals = cursor.fetchall()
-    
-    return render_template('goals.html', goals=goals)
+        # Calculate total balance from goals
+        total_balance = sum(goal[3] for goal in goals)  # goal[3] is current_amount
+    return render_template('goals.html', goals=goals, total_balance=total_balance)
 
 @app.route('/journal')
 def view_journal():
