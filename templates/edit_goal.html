@@ -3,104 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Goal - Financial App</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>✏️ Edit Financial Goal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <div class="container">
-        <div class="sidebar">
-            <!-- Financial Status Overview Widget -->
-            <div class="sidebar-financial-overview">
-                <div class="financial-status-icon" id="sidebar-status-icon">💼</div>
-                <div class="financial-status-text" id="sidebar-status-text">Loading...</div>
-                <div class="financial-quick-stats">
-                    <div class="quick-stat">
-                        <span class="quick-stat-value" id="sidebar-goals-completed">-</span>
-                        <span class="quick-stat-label">Goals</span>
-                    </div>
-                    <div class="quick-stat">
-                        <span class="quick-stat-value" id="sidebar-budget-status">-</span>
-                        <span class="quick-stat-label">Budget</span>
-                    </div>
-                    <div class="quick-stat">
-                        <span class="quick-stat-value" id="sidebar-recent-activity">-</span>
-                        <span class="quick-stat-label">Activity</span>
-                    </div>
-                </div>
-            </div>
-
-            <nav>
-                <ul>
-                    <li><a href="{{ url_for('home') }}">Dashboard</a></li>
-                    <li><a href="{{ url_for('view_goals') }}" class="active">Goals</a></li>
-                    <li><a href="{{ url_for('view_budget') }}">Budget</a></li>
-                    <li><a href="{{ url_for('view_journal') }}">Journal</a></li>
-                </ul>
-            </nav>
-
-            <div class="sidebar-quick-actions">
-                <h3>Quick Actions</h3>
-                <div class="quick-action-buttons">
-                    <a href="{{ url_for('add_goal') }}" class="quick-action-btn">➕ Add Goal</a>
-                    <a href="{{ url_for('add_expense') }}" class="quick-action-btn secondary">💸 Add Expense</a>
-                    <a href="{{ url_for('add_entry') }}" class="quick-action-btn">📝 Journal Entry</a>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    ✏️ Edit Financial Goal
+                </h1>
+                <div class="flex gap-2">
+                    <a href="{{ url_for('view_goals') }}" 
+                       class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm">
+                        ← Back to Goals
+                    </a>
                 </div>
             </div>
         </div>
-        
-        <div class="main-content">
-            <h1>Edit Financial Goal</h1>
-            
-            <form method="POST" action="{{ url_for('edit_goal', goal_id=goal[0]) }}" class="goal-form">
-                <div class="form-group">
-                    <label for="name">Goal Name</label>
-                    <input type="text" id="name" name="name" value="{{ goal[1] }}" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="target_amount">Target Amount ($)</label>
-                    <input type="number" id="target_amount" name="target_amount" step="0.01" value="{{ goal[2] }}" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="deadline">Target Date</label>
-                    <input type="date" id="deadline" name="deadline" value="{{ goal[4] }}" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="category">Category</label>
-                    <select id="category" name="category" required>
-                        <option value="savings" {{ 'selected' if goal[5] == 'savings' else '' }}>Savings</option>
-                        <option value="emergency" {{ 'selected' if goal[5] == 'emergency' else '' }}>Emergency Fund</option>
-                        <option value="investment" {{ 'selected' if goal[5] == 'investment' else '' }}>Investment</option>
-                        <option value="debt" {{ 'selected' if goal[5] == 'debt' else '' }}>Debt Repayment</option>
-                        <option value="purchase" {{ 'selected' if goal[5] == 'purchase' else '' }}>Major Purchase</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description">{{ goal[6] if goal[6] else '' }}</textarea>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="submit-btn">Update Goal</button>
-                    <a href="{{ url_for('view_goals') }}" class="cancel-btn">Cancel</a>
-                </div>
-            </form>
-        </div>
-        
-        <!-- Theme Toggle Button -->
-        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">
-            <span class="sun-icon">☀️</span>
-            <span class="moon-icon">🌙</span>
-        </button>
     </div>
-    
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Navigation -->
+        <nav class="mb-8">
+            <div class="flex flex-wrap gap-2 bg-white rounded-lg p-2 shadow-sm">
+                <a href="{{ url_for('home') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    🏠 Dashboard
+                </a>
+                <a href="{{ url_for('view_goals') }}" class="px-4 py-2 rounded-md bg-blue-100 text-blue-800 font-semibold flex items-center gap-2">
+                    🎯 Goals
+                </a>
+                <a href="{{ url_for('view_budget') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    💸 Budget
+                </a>
+                <a href="{{ url_for('view_journal') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    📓 Journal
+                </a>
+            </div>
+        </nav>
+
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">✏️</div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Edit Your Financial Goal</h2>
+                    <p class="text-gray-600">Update your goal details to stay on track</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('edit_goal', goal_id=goal[0]) }}" class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Goal Name *</label>
+                        <input type="text" id="name" name="name" value="{{ goal[1] }}" required
+                               placeholder="e.g., Emergency Fund, New Car, Vacation"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label for="target_amount" class="block text-sm font-semibold text-gray-700 mb-2">Target Amount *</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
+                            <input type="number" id="target_amount" name="target_amount" step="0.01" value="{{ goal[2] }}" required
+                                   placeholder="0.00"
+                                   class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="deadline" class="block text-sm font-semibold text-gray-700 mb-2">Target Date *</label>
+                        <input type="date" id="deadline" name="deadline" value="{{ goal[4] }}" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">Category *</label>
+                        <select id="category" name="category" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                            <option value="savings" {{ 'selected' if goal[5] == 'savings' else '' }}>💰 Savings</option>
+                            <option value="emergency" {{ 'selected' if goal[5] == 'emergency' else '' }}>🚨 Emergency Fund</option>
+                            <option value="investment" {{ 'selected' if goal[5] == 'investment' else '' }}>📈 Investment</option>
+                            <option value="debt" {{ 'selected' if goal[5] == 'debt' else '' }}>💳 Debt Repayment</option>
+                            <option value="purchase" {{ 'selected' if goal[5] == 'purchase' else '' }}>🛍️ Major Purchase</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                        <textarea id="description" name="description" rows="4"
+                                  placeholder="Add some details about your goal..."
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none">{{ goal[6] if goal[6] else '' }}</textarea>
+                    </div>
+                    
+                    <div class="flex gap-4 pt-6">
+                        <a href="{{ url_for('view_goals') }}" 
+                           class="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-center">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                            ✏️ Update Goal
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Current Progress -->
+            <div class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    📊 Current Progress
+                </h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-white p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600">${{ goal[3]|round(2) }}</div>
+                        <div class="text-gray-600">Current Amount</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600">{{ goal[8]|round(1) }}%</div>
+                        <div class="text-gray-600">Progress</div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300" 
+                             style="width: {{ goal[8]|round }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='app.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 </body>
 </html>

@@ -3,53 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Financial Goal</title>
+    <title>➕ Add Financial Goal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <div class="container">
-        <div class="sidebar">
-            <!-- Keep existing navigation -->
-        </div>
-        
-        <div class="main-content">
-            <h1>Add New Financial Goal</h1>
-            
-            <form method="POST" action="{{ url_for('add_goal') }}" class="goal-form">
-                <div class="form-group">
-                    <label for="name">Goal Name</label>
-                    <input type="text" id="name" name="name" required>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    ➕ Add Financial Goal
+                </h1>
+                <div class="flex gap-2">
+                    <a href="{{ url_for('view_goals') }}" 
+                       class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm">
+                        ← Back to Goals
+                    </a>
                 </div>
-                
-                <div class="form-group">
-                    <label for="target_amount">Target Amount</label>
-                    <input type="number" id="target_amount" name="target_amount" step="0.01" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="deadline">Target Date</label>
-                    <input type="date" id="deadline" name="deadline" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="category">Category</label>
-                    <select id="category" name="category" required>
-                        <option value="savings">Savings</option>
-                        <option value="emergency">Emergency Fund</option>
-                        <option value="investment">Investment</option>
-                        <option value="debt">Debt Repayment</option>
-                        <option value="purchase">Major Purchase</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description"></textarea>
-                </div>
-                
-                <button type="submit">Create Goal</button>
-            </form>
+            </div>
         </div>
     </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Navigation -->
+        <nav class="mb-8">
+            <div class="flex flex-wrap gap-2 bg-white rounded-lg p-2 shadow-sm">
+                <a href="{{ url_for('home') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    🏠 Dashboard
+                </a>
+                <a href="{{ url_for('view_goals') }}" class="px-4 py-2 rounded-md bg-blue-100 text-blue-800 font-semibold flex items-center gap-2">
+                    🎯 Goals
+                </a>
+                <a href="{{ url_for('view_budget') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    💸 Budget
+                </a>
+                <a href="{{ url_for('view_journal') }}" class="px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 text-gray-700">
+                    📓 Journal
+                </a>
+            </div>
+        </nav>
+
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎯</div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Create a New Financial Goal</h2>
+                    <p class="text-gray-600">Set a target and track your progress towards achieving it!</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('add_goal') }}" class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Goal Name *</label>
+                        <input type="text" id="name" name="name" required
+                               placeholder="e.g., Emergency Fund, New Car, Vacation"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        <p class="text-xs text-gray-500 mt-1">Give your goal a descriptive name that motivates you</p>
+                    </div>
+                    
+                    <div>
+                        <label for="target_amount" class="block text-sm font-semibold text-gray-700 mb-2">Target Amount *</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
+                            <input type="number" id="target_amount" name="target_amount" step="0.01" required
+                                   placeholder="0.00"
+                                   class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">How much do you want to save or achieve?</p>
+                    </div>
+                    
+                    <div>
+                        <label for="deadline" class="block text-sm font-semibold text-gray-700 mb-2">Target Date *</label>
+                        <input type="date" id="deadline" name="deadline" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        <p class="text-xs text-gray-500 mt-1">When do you want to achieve this goal?</p>
+                    </div>
+                    
+                    <div>
+                        <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">Category *</label>
+                        <select id="category" name="category" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                            <option value="">Choose a category...</option>
+                            <option value="savings">💰 Savings</option>
+                            <option value="emergency">🚨 Emergency Fund</option>
+                            <option value="investment">📈 Investment</option>
+                            <option value="debt">💳 Debt Repayment</option>
+                            <option value="purchase">🛍️ Major Purchase</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Select the category that best fits your goal</p>
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                        <textarea id="description" name="description" rows="4"
+                                  placeholder="Add some details about your goal, why it's important to you, or your plan to achieve it..."
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Optional: Add motivation or details about your goal</p>
+                    </div>
+                    
+                    <div class="flex gap-4 pt-6">
+                        <a href="{{ url_for('view_goals') }}" 
+                           class="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-center">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                            🎯 Create Goal
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Goal Tips -->
+            <div class="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-100">
+                <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    💡 Goal Setting Tips
+                </h3>
+                <ul class="space-y-2 text-sm text-blue-800">
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500 mt-0.5">•</span>
+                        <span>Make your goals <strong>specific and measurable</strong> - instead of "save money", try "save $5,000"</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500 mt-0.5">•</span>
+                        <span>Set <strong>realistic deadlines</strong> that challenge you but are achievable</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500 mt-0.5">•</span>
+                        <span>Break large goals into <strong>smaller milestones</strong> for easier progress tracking</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500 mt-0.5">•</span>
+                        <span>Review and <strong>update your progress regularly</strong> to stay motivated</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set minimum date to today
+        document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+    </script>
 </body>
 </html>

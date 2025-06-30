@@ -73,7 +73,12 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {% set total_budgeted = budget_data | sum(attribute=2) %}
                 {% set total_spent = budget_data | sum(attribute=3) %}
-                {% set over_budget_count = budget_data | selectattr(3, '>', 'budget[2]') | list | length %}
+                {% set over_budget_count = 0 %}
+                {% for budget in budget_data %}
+                    {% if budget[3] > budget[2] %}
+                        {% set over_budget_count = over_budget_count + 1 %}
+                    {% endif %}
+                {% endfor %}
                 
                 <div class="bg-white rounded-xl p-6 shadow-sm">
                     <div class="flex items-center justify-between">
@@ -89,11 +94,11 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-600 font-medium">Total Spent</p>
-                            <p class="text-2xl font-bold {{ 'text-danger' if total_spent > total_budgeted else 'text-success' }}">
+                            <p class="text-2xl font-bold {% if total_spent > total_budgeted %}text-red-600{% else %}text-green-600{% endif %}">
                                 ${{ '{:,.0f}'.format(total_spent) }}
                             </p>
                         </div>
-                        <div class="text-3xl">{{ '🔥' if total_spent > total_budgeted else '💚' }}</div>
+                        <div class="text-3xl">{% if total_spent > total_budgeted %}🔥{% else %}💚{% endif %}</div>
                     </div>
                 </div>
                 
@@ -101,11 +106,11 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-600 font-medium">Remaining</p>
-                            <p class="text-2xl font-bold {{ 'text-danger' if total_spent > total_budgeted else 'text-success' }}">
+                            <p class="text-2xl font-bold {% if total_spent > total_budgeted %}text-red-600{% else %}text-green-600{% endif %}">
                                 ${{ '{:,.0f}'.format(total_budgeted - total_spent) }}
                             </p>
                         </div>
-                        <div class="text-3xl">{{ '⚠️' if total_spent > total_budgeted else '✅' }}</div>
+                        <div class="text-3xl">{% if total_spent > total_budgeted %}⚠️{% else %}✅{% endif %}</div>
                     </div>
                 </div>
             </div>
@@ -164,26 +169,30 @@
                         <div class="px-6 py-4">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-gray-700">Progress</span>
-                                <span class="text-sm font-medium {{ 'text-danger' if is_over else 'text-gray-700' }}">
+                                <span class="text-sm font-medium {% if is_over %}text-red-600{% else %}text-gray-700{% endif %}">
                                     {{ '{:.0f}'.format(percentage) }}%
                                 </span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-3">
+                                {% set width_percentage = percentage %}
+                                {% if width_percentage > 100 %}
+                                    {% set width_percentage = 100 %}
+                                {% endif %}
                                 <div class="h-3 rounded-full transition-all duration-300 
                                     {% if is_over %}bg-gradient-to-r from-red-400 to-red-600
                                     {% elif is_warning %}bg-gradient-to-r from-yellow-400 to-yellow-500
                                     {% else %}bg-gradient-to-r from-green-400 to-green-500
                                     {% endif %}" 
-                                    style="width: {{ min(percentage, 100) }}%">
+                                    style="width: {{ '{:.0f}'.format(width_percentage) }}%">
                                 </div>
                             </div>
                             <div class="mt-2">
                                 {% if is_over %}
-                                    <p class="text-sm font-medium text-danger">
+                                    <p class="text-sm font-medium text-red-600">
                                         ${{ '{:,.0f}'.format(budget[3] - budget[2]) }} over budget
                                     </p>
                                 {% else %}
-                                    <p class="text-sm font-medium text-success">
+                                    <p class="text-sm font-medium text-green-600">
                                         ${{ '{:,.0f}'.format(budget[2] - budget[3]) }} remaining
                                     </p>
                                 {% endif %}

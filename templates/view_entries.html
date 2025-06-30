@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Entries</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- Sidebar -->
+            <aside class="md:w-1/4 mb-8 md:mb-0">
+                <nav class="bg-white rounded-xl shadow p-4 mb-6">
+                    <ul class="space-y-2">
+                        <li><a href="{{ url_for('home') }}" class="block py-2 px-4 rounded hover:bg-blue-100">🏠 Dashboard</a></li>
+                        <li><a href="{{ url_for('view_goals') }}" class="block py-2 px-4 rounded hover:bg-blue-100">🎯 Goals</a></li>
+                        <li><a href="{{ url_for('view_budget') }}" class="block py-2 px-4 rounded hover:bg-blue-100">💸 Budget</a></li>
+                        <li><a href="{{ url_for('view_journal') }}" class="block py-2 px-4 rounded bg-blue-200 font-bold">📓 Journal</a></li>
+                    </ul>
+                </nav>
+            </aside>
+            <!-- Main Content -->
+            <main class="md:w-3/4">
+                <h1 class="text-3xl font-extrabold mb-6 flex items-center gap-2">📓 Journal Entries</h1>
+                <div class="bg-white rounded-xl shadow p-6">
+                    {% if entries %}
+                        <div class="space-y-4">
+                            {% for entry in entries %}
+                            <div class="border-b pb-2 mb-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-gray-800">{{ entry[1] }}</span>
+                                    <span class="text-xs text-gray-500">{{ entry[4] if entry[4] else entry[2] }}</span>
+                                </div>
+                                <p class="text-gray-700 whitespace-pre-line">{{ entry[3] }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-gray-400 italic">No journal entries yet.</div>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

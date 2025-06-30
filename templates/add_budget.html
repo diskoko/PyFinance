@@ -5,48 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Budget - Financial App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <div class="sidebar">
-            <nav>
-                <ul>
-                    <li><a href="{{ url_for('home') }}">Dashboard</a></li>
-                    <li><a href="{{ url_for('view_goals') }}">Goals</a></li>
-                    <li><a href="{{ url_for('view_budget') }}">Budget</a></li>
-                    <li><a href="{{ url_for('view_journal') }}">Journal</a></li>
-                </ul>
-            </nav>
-        </div>
-        
-        <div class="main-content">
-            <h1>Create New Budget</h1>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div class="max-w-2xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow p-6">
+            <h1 class="text-2xl font-bold mb-4 flex items-center gap-2">💸 Create New Budget</h1>
             
-            <form method="POST" class="budget-form">
-                <div class="form-group">
-                    <label for="category">Budget Category</label>
-                    <select id="category" name="category" required>
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label for="category" class="block text-gray-700 font-semibold mb-1">Budget Category</label>
+                    <select id="category" name="category" class="w-full border rounded px-3 py-2" required>
                         <option value="">Select Category</option>
-                        <option value="housing">Housing</option>
-                        <option value="food">Food & Dining</option>
-                        <option value="transportation">Transportation</option>
-                        <option value="utilities">Utilities</option>
-                        <option value="entertainment">Entertainment</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="shopping">Shopping</option>
-                        <option value="education">Education</option>
-                        <option value="other">Other</option>
+                        <option value="food">🍕 Food & Dining</option>
+                        <option value="housing">🏠 Housing</option>
+                        <option value="transportation">🚗 Transportation</option>
+                        <option value="utilities">⚡ Utilities</option>
+                        <option value="entertainment">🎬 Entertainment</option>
+                        <option value="healthcare">🏥 Healthcare</option>
+                        <option value="shopping">🛍️ Shopping</option>
+                        <option value="education">📚 Education</option>
+                        <option value="other">💰 Other</option>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="planned_amount">Planned Amount ($)</label>
-                    <input type="number" id="planned_amount" name="planned_amount" step="1" required>
+                <div>
+                    <label for="planned_amount" class="block text-gray-700 font-semibold mb-1">Budget Amount ($)</label>
+                    <input type="number" id="planned_amount" name="planned_amount" step="1" min="1" 
+                           class="w-full border rounded px-3 py-2" placeholder="e.g. 500" required>
+                    <p class="text-sm text-gray-500 mt-1">How much do you want to spend in this category this month?</p>
                 </div>
                 
-                <div class="form-group">
-                    <label for="month">Month</label>
-                    <input type="month" id="month" name="month" required value="{{ current_month }}">
+                <div>
+                    <label for="month" class="block text-gray-700 font-semibold mb-1">Month</label>
+                    <input type="month" id="month" name="month" class="w-full border rounded px-3 py-2" 
+                           required value="{{ current_month }}">
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded font-bold hover:bg-blue-600">
+                        Create Budget
+                    </button>
+                    <a href="{{ url_for('view_budget') }}" class="text-blue-500 hover:underline px-6 py-2">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
                 </div>
                 
                 <div class="form-actions">

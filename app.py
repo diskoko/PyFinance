@@ -182,31 +182,16 @@ def update_goal(goal_id):
 
 @app.route('/view_entries')
 def view_entries():
-    """Show all journal entries"""
+    """Show all journal entries in a modern card layout"""
     with sqlite3.connect('finance.db') as conn:
         cursor = conn.cursor()
-        # Get all journal entries with formatted date
         cursor.execute("""
             SELECT id, title, date, content, strftime('%d %b %Y', date) as formatted_date
             FROM journal 
             ORDER BY date DESC
         """)
-        entries = cursor.fetchall()  # Add this line to store query results
-        
-        # Get days with entries for current month
-        today = datetime.now().strftime('%Y-%m-%d')
-        current_month = today[:7]
-        cursor.execute("""
-            SELECT DISTINCT strftime('%d', date) 
-            FROM journal 
-            WHERE strftime('%Y-%m', date) = ?
-        """, (current_month,))
-        days_with_entries = [int(day[0]) for day in cursor.fetchall()]
-    
-    return render_template('entries.html', 
-                          entries=entries,
-                          entry_days=days_with_entries,
-                          days=range(1, 32))
+        entries = cursor.fetchall()
+    return render_template('view_entries.html', entries=entries)
 
 @app.route('/add_entry', methods=['GET', 'POST'])
 def add_entry():
@@ -338,7 +323,10 @@ def add_budget():
         
         return redirect(url_for('view_budget'))
     
-    return render_template('add_budget.html')
+    # Get current month for default value
+    today = datetime.now().strftime('%Y-%m-%d')
+    current_month = today[:7]
+    return render_template('add_budget.html', current_month=current_month)
 
 @app.route('/add_expense', methods=['GET', 'POST'])
 def add_expense():
@@ -433,7 +421,43 @@ def financial_status():
         'total_spent': budget_data[1]
     })
 
+@app.route('/delete_goal/<int:goal_id>', methods=['POST'])
+def delete_goal(goal_id):
+    with sqlite3.connect('finance.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM financial_goals WHERE id = ?", (goal_id,))
+        cursor.execute("DELETE FROM transactions WHERE goal_id = ?", (goal_id,))
+        conn.commit()
+    return redirect(url_for('view_goals'))
+
+@app.route('/delete_entry/<int:entry_id>', methods=['POST'])
+def delete_entry(entry_id):
+    with sqlite3.connect('finance.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM journal WHERE id = ?", (entry_id,))
+        conn.commit()
+    return redirect(url_for('view_journal'))
+
+@app.route('/edit_entry/<int:entry_id>', methods=['GET', 'POST'])
+def edit_entry(entry_id):
+    with sqlite3.connect('finance.db') as conn:
+        cursor = conn.cursor()
+        if request.method == 'POST':
+            title = request.form['title']
+            content = request.form['content']
+            date = request.form['date']
+            cursor.execute("""
+                UPDATE journal SET title = ?, content = ?, date = ? WHERE id = ?
+            """, (title, content, date, entry_id))
+            conn.commit()
+            return redirect(url_for('view_journal'))
+        else:
+            cursor.execute("SELECT id, title, content, date FROM journal WHERE id = ?", (entry_id,))
+            entry = cursor.fetchone()
+    return render_template('edit_entry.html', entry=entry)
+
 if __name__ == '__main__':
+    import os
     init_db()
     port = int(os.environ.get('PORT', 10000))  # Render sets PORT env var
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
