@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from datetime import datetime
 import sqlite3
+import os
 
 app = Flask(__name__)
 
@@ -434,15 +435,5 @@ def financial_status():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
-    
-    # Get configuration from environment variables
-    port = int(os.environ.get('PORT', 5000))
-    host = os.environ.get('HOST', '0.0.0.0')
-    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
-    
-    print(f"🌐 Starting Mentorship System on {host}:{port}")
-    print(f"🔧 Debug mode: {debug}")
-    print(f"🔑 Secret key configured: {'✅' if app.config['SECRET_KEY'] != 'dev-key-change-in-production' else '⚠️  Using development key'}")
-    
-    app.run(debug=debug, host=host, port=port)
+    port = int(os.environ.get('PORT', 10000))  # Render sets PORT env var
+    app.run(host='0.0.0.0', port=port)
