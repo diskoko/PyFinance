@@ -200,28 +200,34 @@ def view_entries():
 
 @app.route('/add_entry', methods=['POST'])
 def add_entry():
-    """Add a new journal entry (AJAX/JSON or fallback)"""
-    title = request.form['title']
-    content = request.form['content']
-    date = request.form['date']
-    with sqlite3.connect('finance.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO journal (title, content, date)
-            VALUES (?, ?, ?)
-        """, (title, content, date))
-        conn.commit()
-        entry_id = cursor.lastrowid
-    # If AJAX, return JSON for frontend animation
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    """Add a new journal entry (AJAX/JSON response)"""
+    try:
+        title = request.form['title']
+        content = request.form['content']
+        date = request.form['date']
+        with sqlite3.connect('finance.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO journal (title, content, date)
+                VALUES (?, ?, ?)
+            """, (title, content, date))
+            conn.commit()
+            entry_id = cursor.lastrowid
+        # Format the date for display
+        from datetime import datetime
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        formatted_date = date_obj.strftime('%d %b %Y')
+        # Always return JSON for AJAX requests
         return jsonify({
+            'success': True,
             'id': entry_id,
             'title': title,
             'content': content,
-            'date': date
+            'date': date,
+            'formatted_date': formatted_date
         })
-    # Otherwise, fallback to journal page
-    return redirect(url_for('view_journal'))
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/goals')
 def view_goals():
@@ -443,11 +449,22 @@ def delete_goal(goal_id):
 
 @app.route('/delete_entry/<int:entry_id>', methods=['POST'])
 def delete_entry(entry_id):
-    with sqlite3.connect('finance.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM journal WHERE id = ?", (entry_id,))
-        conn.commit()
-    return redirect(url_for('view_journal'))
+    """Delete a journal entry"""
+    try:
+        with sqlite3.connect('finance.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM journal WHERE id = ?", (entry_id,))
+            conn.commit()
+        # Return JSON response for AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': 'Entry deleted successfully'})
+        else:
+            return redirect(url_for('view_journal'))
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': str(e)}), 400
+        else:
+            return redirect(url_for('view_journal'))
 
 @app.route('/edit_entry/<int:entry_id>', methods=['GET', 'POST'])
 def edit_entry(entry_id):

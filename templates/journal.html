@@ -4,253 +4,462 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Journal - Financial App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                fontFamily: {
+                    'sans': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+                },
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .main-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .card { background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .nav-tab { 
-            background: rgba(255,255,255,0.1); 
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
         }
-        .nav-tab.active { 
-            background: white; 
-            color: #1f2937;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+        .goal-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .btn-primary:hover { background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%); transform: translateY(-1px); }
-        .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .btn-success:hover { background: linear-gradient(135deg, #0e8478 0%, #32d96b 100%); transform: translateY(-1px); }
-        .btn-blue { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); }
-        .btn-blue:hover { background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%); transform: translateY(-1px); }
-        
-        /* Calendar Day Styling */
-        .calendar-day { 
-            width: 30px; 
-            height: 30px; 
-            display: flex; 
-            align-items: center; 
+
+        .goal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        .progress-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            background: linear-gradient(90deg, #10B981, #059669);
+            transform-origin: left;
+            animation: progressPulse 2s ease-in-out;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: progressShine 2s ease-in-out infinite;
+        }
+
+        @keyframes progressPulse {
+            0% { transform: scaleX(0); }
+            100% { transform: scaleX(1); }
+        }
+
+        @keyframes progressShine {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .current-day {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .entry-day {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .days div {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
             justify-content: center;
-            border-radius: 6px; 
-            cursor: pointer; 
-            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        .days div:hover:not(.current-day):not(.entry-day) {
+            background: #f8fafc;
+            transform: scale(1.1);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #10B981, #059669);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+
+        .balance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-link {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-1px);
+        }
+
+        .quick-action-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .calendar-day {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 13px;
             font-weight: 500;
             color: #374151;
         }
-        .calendar-day:hover { 
-            background: #f3f4f6; 
+
+        .calendar-day:hover {
+            background: #f8fafc;
         }
-        .calendar-day.current-day { 
-            background: #3b82f6; 
-            color: white; 
-        }
-        .calendar-day.has-entry { 
-            background: #dcfce7; 
-            color: #166534; 
-        }
-        .calendar-day.selected {
-            background: #667eea;
+
+        .calendar-day.current-day {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
             color: white;
         }
-        
-        .focus-card { background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); }
+
+        .calendar-day.has-entry {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .focus-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .entry-animation {
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .entry-removing {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        .form-submitting {
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-feedback {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
-<body class="min-h-screen main-bg">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
     <!-- Header -->
-    <header class="px-6 py-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex items-center justify-between mb-8">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl">💰</span>
-                    <h1 class="text-xl font-bold text-white">Financial Dashboard</h1>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button class="btn-success text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-lg">
-                        + Add Expense
+    <div class="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-5">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    📓 Journal
+                </h1>
+                <div class="flex gap-3">
+                    <button onclick="showAddExpenseModal()" class="quick-action-btn bg-success text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-green-600 transition-colors flex items-center gap-2 text-sm">
+                        ➕ Add Expense
                     </button>
-                    <button class="btn-blue text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-lg">
-                        + Add Budget
+                    <button onclick="showAddBudgetModal()" class="quick-action-btn bg-primary text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm">
+                        ➕ Add Budget
                     </button>
                 </div>
             </div>
-            
-            <!-- Navigation Tabs -->
-            <div class="flex items-center gap-2">
-                <a href="{{ url_for('home') }}" class="nav-tab px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all duration-200 flex items-center gap-2">
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Navigation -->
+        <nav class="mb-8">
+            <div class="flex flex-wrap gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-gray-200/50">
+                <a href="{{ url_for('home') }}" class="nav-link px-5 py-3 rounded-lg hover:bg-blue-50 flex items-center gap-2 text-gray-700">
                     🏠 Dashboard
                 </a>
-                <a href="{{ url_for('view_goals') }}" class="nav-tab px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all duration-200 flex items-center gap-2">
+                <a href="{{ url_for('view_goals') }}" class="nav-link px-5 py-3 rounded-lg hover:bg-blue-50 flex items-center gap-2 text-gray-700">
                     🎯 Goals
                 </a>
-                <a href="{{ url_for('view_budget') }}" class="nav-tab px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all duration-200 flex items-center gap-2">
+                <a href="{{ url_for('view_budget') }}" class="nav-link px-5 py-3 rounded-lg hover:bg-blue-50 flex items-center gap-2 text-gray-700">
                     💸 Budget
                 </a>
-                <a href="{{ url_for('view_journal') }}" class="nav-tab active px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                <a href="{{ url_for('view_journal') }}" class="nav-link px-5 py-3 rounded-lg bg-blue-100 text-blue-800 font-semibold flex items-center gap-2">
                     📓 Journal
                 </a>
             </div>
-        </div>
-    </header>
+        </nav>
 
-    <main class="px-6 pb-8">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <!-- Left Sidebar -->
-                <div class="lg:col-span-1 space-y-6">
-                    <!-- Stay Focused Card -->
-                    <div class="card p-6 text-center focus-card">
-                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                            <span class="text-xl">💼</span>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar -->
+            <aside class="lg:col-span-1">
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-5 mb-6 border border-gray-200/50">
+                    <div class="financial-status-overview">
+                        <div class="text-center mb-5">
+                            <div class="text-4xl mb-3" id="sidebar-status-icon">💼</div>
+                            <div class="font-bold text-gray-800 text-lg" id="sidebar-status-text">Stay Focused</div>
                         </div>
-                        <h3 class="font-bold text-gray-800 mb-4">Stay Focused</h3>
-                        <div class="flex justify-between text-sm mb-2">
-                            <div>
-                                <div class="text-2xl font-bold text-blue-600">{{ entries|length if entries else 0 }}/{{ entries|length + 5 if entries else 5 }}</div>
-                                <div class="text-gray-600">Entries</div>
+                        <div class="grid grid-cols-3 gap-3 text-center">
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <div class="font-bold text-blue-600 text-lg" id="entryCount">{{ entries|length if entries else 0 }}</div>
+                                <div class="text-xs text-gray-600 font-medium">Entries</div>
                             </div>
-                            <div>
-                                <div class="text-2xl font-bold text-green-600">{{ ((entries|length / (entries|length + 5)) * 100)|round if entries else 0 }}%</div>
-                                <div class="text-gray-600">Progress</div>
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <div class="font-bold text-green-600 text-lg" id="progressPercent">{{ ((entries|length / (entries|length + 5)) * 100)|round if entries else 0 }}%</div>
+                                <div class="text-xs text-gray-600 font-medium">Progress</div>
                             </div>
-                            <div>
-                                <div class="text-2xl font-bold text-yellow-600">{{ entries|length if entries else 0 }}</div>
-                                <div class="text-gray-600">This Month</div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <div class="font-bold text-yellow-600 text-lg" id="monthlyCount">{{ entries|length if entries else 0 }}</div>
+                                <div class="text-xs text-gray-600 font-medium">This Month</div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Calendar Widget -->
-                    <div class="bg-white rounded-xl shadow p-4 mb-6">
-                        <h3 class="font-bold text-gray-800 mb-3">📅 Calendar</h3>
-                        <div class="calendar" role="region" aria-label="Calendar">
-                            <div class="month mb-2">
-                                <div class="flex items-center justify-between">
-                                    <button class="text-2xl hover:bg-gray-100 p-1 rounded" onclick="prevMonth()">&#10094;</button>
-                                    <div id="monthYear" class="font-bold text-lg text-center flex-1"></div>
-                                    <button class="text-2xl hover:bg-gray-100 p-1 rounded" onclick="nextMonth()">&#10095;</button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-7 gap-1 text-xs text-gray-500 mb-2 text-center">
-                                <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
-                            </div>
-                            <div class="days grid grid-cols-7 gap-1"></div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="card p-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                        <div class="space-y-3">
-                            <a href="{{ url_for('add_goal') }}" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2 justify-center">
-                                ➕ Add Goal
-                            </a>
-                            <a href="{{ url_for('add_expense') }}" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2 justify-center">
-                                💸 Add Expense
-                            </a>
-                            <a href="{{ url_for('add_budget') }}" class="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium flex items-center gap-2 justify-center">
-                                ➕ Add Budget
-                            </a>
-                            <a href="{{ url_for('add_entry') }}" class="w-full bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors font-medium flex items-center gap-2 justify-center">
-                                📝 Add Journal Entry
-                            </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Content -->
-                <div class="lg:col-span-3 space-y-6">
-                    <!-- Journal Overview -->
-                    <div class="card p-8 text-center">
-                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-2xl">🎯</span>
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-5 mb-6 border border-gray-200/50">
+                    <h3 class="font-bold text-gray-800 mb-4 text-lg">📅 Calendar</h3>
+                    <div class="calendar" role="region" aria-label="Calendar">
+                        <div class="month mb-3">
+                            <div class="flex items-center justify-between">
+                                <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-gray-600 font-semibold" onclick="prevMonth()">‹</button>
+                                <div id="monthYear" class="font-bold text-lg text-center flex-1"></div>
+                                <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-gray-600 font-semibold" onclick="nextMonth()">›</button>
+                            </div>
                         </div>
-                        <h2 class="text-xl font-bold text-gray-900 mb-2">Journal Overview</h2>
-                        <p class="text-gray-600 mb-6">Time to refocus on your financial goals. You've got this! 💪</p>
-                    </div>
-
-                    <!-- Add Journal Entry Form -->
-                    <div class="card p-6">
-                        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <span class="text-2xl">📝</span>
-                            Write Journal Entry
-                        </h2>
-                        <form id="journalForm" action="{{ url_for('add_entry') }}" method="post" class="space-y-4">
-                            <div>
-                                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Entry Title</label>
-                                <input type="text" id="title" name="title" 
-                                       class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                       placeholder="What's on your mind today?" required>
-                            </div>
-                            <div>
-                                <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                                <textarea id="content" name="content" rows="6"
-                                          class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                                          placeholder="Write about your financial goals, spending thoughts, insights, or any reflections..." required></textarea>
-                            </div>
-                            <input type="hidden" name="date" value="{{ current_date }}">
-                            <div class="flex justify-end">
-                                <button type="submit" 
-                                        class="btn-primary text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg">
-                                    Save Entry
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Journal Entries -->
-                    <div class="space-y-4" id="entriesList">
-                        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <span class="text-2xl">📚</span>
-                            Recent Entries
-                            <span class="text-sm text-gray-500 font-normal">({{ entries|length if entries else 0 }} total)</span>
-                        </h2>
-                        {% for entry in entries %}
-                        <div class="card p-6 hover:shadow-lg transition-all duration-200 entry-item" id="entry-{{ entry[0] }}">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <span class="text-lg">📝</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-semibold text-gray-900 text-lg">{{ entry[1] }}</h3>
-                                        <p class="text-sm text-gray-500">{{ entry[4] if entry[4] else entry[3] }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="editEntry('{{ entry[0] }}')" type="button" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">
-                                        Edit
-                                    </button>
-                                    <button onclick="deleteEntry('{{ entry[0] }}')" type="button" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="text-gray-700 leading-relaxed whitespace-pre-line pl-13">{{ entry[2] }}</div>
+                        <div class="grid grid-cols-7 gap-1 text-xs text-gray-500 mb-3 text-center font-medium">
+                            <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
                         </div>
-                        {% endfor %}
-                        {% if not entries %}
-                        <div class="card p-12 text-center">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span class="text-2xl">📝</span>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">No journal entries yet</h3>
-                            <p class="text-gray-600 mb-6">Start documenting your financial journey today!</p>
-                            <button onclick="document.getElementById('title').focus()" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">
-                                Write First Entry
+                        <div class="days grid grid-cols-7 gap-1"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200/50">
+                    <h3 class="font-bold text-gray-800 mb-4 text-lg">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <button onclick="window.location.href='{{ url_for('add_goal') }}'" class="quick-action-btn w-full bg-primary text-white py-3 px-4 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-colors">
+                            ➕ Add Goal
+                        </button>
+                        <button onclick="window.location.href='{{ url_for('add_expense') }}'" class="quick-action-btn w-full bg-success text-white py-3 px-4 rounded-xl text-sm font-semibold hover:bg-green-600 transition-colors">
+                            💸 Add Expense
+                        </button>
+                        <button onclick="window.location.href='{{ url_for('add_budget') }}'" class="quick-action-btn w-full bg-primary text-white py-3 px-4 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-colors">
+                            ➕ Add Budget
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="lg:col-span-3 space-y-6">
+                <!-- Journal Overview -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 text-center border border-gray-200/50">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Journal Overview</h2>
+                    <p class="text-gray-600 mb-6">Time to refocus on your financial goals. You've got this! 💪</p>
+                </div>
+
+                <!-- Add Journal Entry Form -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200/50">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <span class="text-2xl">📝</span>
+                        Write Journal Entry
+                    </h2>
+                    <form id="journalForm" action="{{ url_for('add_entry') }}" method="post" class="space-y-4">
+                        <div>
+                            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Entry Title</label>
+                            <input type="text" id="title" name="title" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="What's on your mind today?" required>
+                        </div>
+                        <div>
+                            <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                            <textarea id="content" name="content" rows="6" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none" placeholder="Write about your financial goals, spending thoughts, insights, or any reflections..." required></textarea>
+                        </div>
+                        <input type="hidden" name="date" value="{{ current_date }}">
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg">
+                                Save Entry
                             </button>
                         </div>
-                        {% endif %}
-                    </div>
+                    </form>
                 </div>
-            </div>
+
+                <!-- Journal Entries -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200/50">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <span class="text-2xl">📚</span>
+                        Recent Entries
+                        <span class="text-sm text-gray-500 font-normal">({{ entries|length if entries else 0 }} total)</span>
+                    </h2>
+                    {% for entry in entries %}
+                    <div class="bg-white rounded-lg p-6 hover:shadow-lg transition-all duration-200 entry-item border border-gray-200/50 mb-4" id="entry-{{ entry[0] }}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span class="text-lg">📝</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 text-lg">{{ entry[1] }}</h3>
+                                    <p class="text-sm text-gray-500">{{ entry[4] if entry[4] else entry[3] }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editEntry('{{ entry[0] }}')" type="button" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">
+                                    Edit
+                                </button>
+                                <button onclick="deleteEntry('{{ entry[0] }}')" type="button" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-gray-700 leading-relaxed whitespace-pre-line pl-13">{{ entry[2] }}</div>
+                    </div>
+                    {% endfor %}
+                    {% if not entries %}
+                    <div class="bg-white p-12 text-center rounded-lg border border-gray-200/50">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">📝</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">No journal entries yet</h3>
+                        <p class="text-gray-600 mb-6">Start documenting your financial journey today!</p>
+                        <button onclick="document.getElementById('title').focus()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-2 rounded-lg font-medium">
+                            Write First Entry
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </main>
         </div>
-    </main>
+    </div>
 
     <script>
         // Calendar variables
@@ -260,7 +469,7 @@
 
         function renderCalendar() {
             const monthYearDisplay = document.getElementById('monthYear');
-            const daysContainer = document.querySelector('.calendar .days');
+            const daysContainer = document.querySelector('.days');
             daysContainer.innerHTML = '';
 
             const month = selectedDate.getMonth();
@@ -282,12 +491,17 @@
                 const dayElement = document.createElement('div');
                 dayElement.innerHTML = i;
                 dayElement.className = 'calendar-day';
+
+                // Highlight today
                 if (i === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
                     dayElement.classList.add('current-day');
                 }
+
+                // Highlight days with entries
                 if (entryDays.includes(i)) {
                     dayElement.classList.add('has-entry');
                 }
+
                 dayElement.onclick = (event) => selectDate(i, event);
                 daysContainer.appendChild(dayElement);
             }
@@ -357,13 +571,13 @@
         });
 
         function addEntryToList(entry) {
-            const entriesList = document.getElementById('entriesList');
+            const entriesList = document.querySelector('.space-y-4');
             // Remove 'no entries' card if present
-            const noEntries = entriesList.querySelector('.card.p-12');
+            const noEntries = entriesList.querySelector('.bg-white.p-12');
             if (noEntries) noEntries.remove();
             // Create new entry card
             const div = document.createElement('div');
-            div.className = 'card p-6 hover:shadow-lg transition-all duration-200 entry-item';
+            div.className = 'bg-white rounded-lg p-6 hover:shadow-lg transition-all duration-200 entry-item border border-gray-200/50 mb-4';
             div.id = `entry-${entry.id}`;
             div.style.opacity = 0;
             div.innerHTML = `
@@ -388,7 +602,5 @@
             setTimeout(() => { div.style.transition = 'opacity 0.5s'; div.style.opacity = 1; }, 10);
         }
     </script>
-
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
