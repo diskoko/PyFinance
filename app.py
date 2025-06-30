@@ -83,14 +83,25 @@ def home():
         # Calculate total balance from goals
         total_balance = sum(goal[3] for goal in goals)  # goal[3] is current_amount
         
-        # Get recent transactions
+        # Calculate goals completed and total for sidebar
+        goals_total = len(goals)
+        goals_completed = sum(1 for goal in goals if goal[3] >= goal[2])  # current >= target
+        
+        # Get recent transactions (show the 5 most recent, newest at the top)
         cursor.execute("""
             SELECT t.date, t.amount, t.type, g.name 
             FROM transactions t 
             JOIN financial_goals g ON t.goal_id = g.id 
-            ORDER BY t.date DESC LIMIT 5
+            ORDER BY t.date DESC, t.id DESC LIMIT 5
         """)
         recent_transactions = cursor.fetchall()
+        
+        # Count recent activity (last 7 days)
+        cursor.execute("""
+            SELECT COUNT(*) FROM transactions 
+            WHERE date >= date('now', '-7 days')
+        """)
+        recent_activity_count = cursor.fetchone()[0]
         
         # Get journal entries for calendar
         current_month = today[:7]
@@ -102,7 +113,6 @@ def home():
         days_with_entries = [int(day[0]) for day in cursor.fetchall()]
         
         # Get budget overview for dashboard
-        current_month = today[:7]
         cursor.execute("""
             SELECT b.category, b.planned_amount, 
                    COALESCE(SUM(e.amount), 0) as spent_amount,
@@ -114,19 +124,44 @@ def home():
         """, (current_month,))
         budget_overview = cursor.fetchall()
         
+        # Calculate budget status (average spending percentage across all categories)
+        if budget_overview:
+            budget_status = sum(budget[3] for budget in budget_overview) / len(budget_overview)
+        else:
+            budget_status = 0
+        
         # Calculate total financial health score
-        total_goals = len(goals)
-        completed_goals = sum(1 for goal in goals if goal[3] >= goal[2])
-        goal_score = (completed_goals / total_goals * 100) if total_goals > 0 else 0
+        goal_score = (goals_completed / goals_total * 100) if goals_total > 0 else 0
+        
+        # Determine financial status for sidebar
+        if goal_score >= 80 and budget_status <= 90:
+            status_icon = "🔥"
+            status_text = "On Fire!"
+        elif goal_score >= 60 and budget_status <= 100:
+            status_icon = "✨"
+            status_text = "Looking Good"
+        elif goal_score >= 40 or budget_status <= 120:
+            status_icon = "👀"
+            status_text = "Stay Focused"
+        else:
+            status_icon = "💀"
+            status_text = "Need Help"
     
     return render_template('index.html',
                           goals=goals,
                           transactions=recent_transactions,
                           budget_overview=budget_overview,
                           goal_score=goal_score,
-                          entry_days=days_with_entries,
+                          entry_days=days_with_entries,  # <-- pass to template
                           current_date=today,
-                          total_balance=total_balance)
+                          total_balance=total_balance,
+                          # New dynamic data for sidebar
+                          goals_completed=goals_completed,
+                          goals_total=goals_total,
+                          budget_status=round(budget_status, 1),
+                          recent_activity_count=recent_activity_count,
+                          status_icon=status_icon,
+                          status_text=status_text)
 
 @app.route('/add_goal', methods=['GET', 'POST'])
 def add_goal():
@@ -231,7 +266,8 @@ def add_entry():
 
 @app.route('/goals')
 def view_goals():
-    """View all financial goals and their progress"""
+    """View all financial goals and their progress, with sidebar stats"""
+    today = datetime.now().strftime('%Y-%m-%d')
     with sqlite3.connect('finance.db') as conn:
         cursor = conn.cursor()
         cursor.execute("""
@@ -242,9 +278,49 @@ def view_goals():
             ORDER BY deadline ASC
         """)
         goals = cursor.fetchall()
-        # Calculate total balance from goals
-        total_balance = sum(goal[3] for goal in goals)  # goal[3] is current_amount
-    return render_template('goals.html', goals=goals, total_balance=total_balance)
+        total_balance = sum(goal[3] for goal in goals)
+        goals_total = len(goals)
+        goals_completed = sum(1 for goal in goals if goal[3] >= goal[2])
+        # Get budget status for sidebar
+        current_month = today[:7]
+        cursor.execute("""
+            SELECT b.category, b.planned_amount, 
+                   COALESCE(SUM(e.amount), 0) as spent_amount,
+                   (COALESCE(SUM(e.amount), 0) / b.planned_amount * 100) as spent_percent
+            FROM budgets b
+            LEFT JOIN expenses e ON b.id = e.budget_id 
+            WHERE b.month = ?
+            GROUP BY b.id, b.category, b.planned_amount
+        """, (current_month,))
+        budget_overview = cursor.fetchall()
+        if budget_overview:
+            budget_status = sum(budget[3] for budget in budget_overview) / len(budget_overview)
+        else:
+            budget_status = 0
+        # Recent activity count for sidebar
+        cursor.execute("""
+            SELECT COUNT(*) FROM transactions 
+            WHERE date >= date('now', '-7 days')
+        """)
+        recent_activity_count = cursor.fetchone()[0]
+        # Sidebar status icon/text logic (reuse from home)
+        goal_score = (goals_completed / goals_total * 100) if goals_total > 0 else 0
+        if goal_score >= 80 and budget_status <= 90:
+            status_icon = "🔥"
+            status_text = "On Fire!"
+        elif goal_score >= 60 and budget_status <= 100:
+            status_icon = "✨"
+            status_text = "Looking Good"
+        elif goal_score >= 40 or budget_status <= 120:
+            status_icon = "👀"
+            status_text = "Stay Focused"
+        else:
+            status_icon = "💀"
+            status_text = "Need Help"
+    return render_template('goals.html', goals=goals, total_balance=total_balance,
+                          goals_completed=goals_completed, goals_total=goals_total,
+                          budget_status=round(budget_status, 1), recent_activity_count=recent_activity_count,
+                          status_icon=status_icon, status_text=status_text)
 
 @app.route('/journal')
 def view_journal():
@@ -412,30 +488,11 @@ def financial_status():
     goal_completion_rate = (completed_goals / total_goals * 100) if total_goals > 0 else 0
     budget_utilization = (budget_data[1] / budget_data[0] * 100) if budget_data[0] > 0 else 0
     
-    # Generate financial health icon (brainrot style)
-    if goal_completion_rate >= 80 and budget_utilization <= 90:
-        status_icon = "🔥"  # Fire (great performance)
-        status_text = "On Fire!"
-    elif goal_completion_rate >= 60 and budget_utilization <= 100:
-        status_icon = "✨"  # Sparkles (good)
-        status_text = "Looking Good"
-    elif goal_completion_rate >= 40 or budget_utilization <= 120:
-        status_icon = "👀"  # Eyes (neutral/watching)
-        status_text = "Stay Focused"
-    else:
-        status_icon = "💀"  # Skull (needs attention)
-        status_text = "Need Help"
-    
     return jsonify({
-        'status_icon': status_icon,
-        'status_text': status_text,
-        'goal_completion_rate': round(goal_completion_rate, 1),
-        'budget_utilization': round(budget_utilization, 1),
-        'total_goals': total_goals,
-        'completed_goals': completed_goals,
-        'recent_activity': recent_activity,
-        'total_budget': budget_data[0],
-        'total_spent': budget_data[1]
+        'success': True,
+        'goal_completion_rate': goal_completion_rate,
+        'budget_utilization': budget_utilization,
+        'recent_activity': recent_activity
     })
 
 @app.route('/delete_goal/<int:goal_id>', methods=['POST'])
@@ -447,45 +504,8 @@ def delete_goal(goal_id):
         conn.commit()
     return redirect(url_for('view_goals'))
 
-@app.route('/delete_entry/<int:entry_id>', methods=['POST'])
-def delete_entry(entry_id):
-    """Delete a journal entry"""
-    try:
-        with sqlite3.connect('finance.db') as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM journal WHERE id = ?", (entry_id,))
-            conn.commit()
-        # Return JSON response for AJAX requests
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': True, 'message': 'Entry deleted successfully'})
-        else:
-            return redirect(url_for('view_journal'))
-    except Exception as e:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'error': str(e)}), 400
-        else:
-            return redirect(url_for('view_journal'))
-
-@app.route('/edit_entry/<int:entry_id>', methods=['GET', 'POST'])
-def edit_entry(entry_id):
-    with sqlite3.connect('finance.db') as conn:
-        cursor = conn.cursor()
-        if request.method == 'POST':
-            title = request.form['title']
-            content = request.form['content']
-            date = request.form['date']
-            cursor.execute("""
-                UPDATE journal SET title = ?, content = ?, date = ? WHERE id = ?
-            """, (title, content, date, entry_id))
-            conn.commit()
-            return redirect(url_for('view_journal'))
-        else:
-            cursor.execute("SELECT id, title, content, date FROM journal WHERE id = ?", (entry_id,))
-            entry = cursor.fetchone()
-    return render_template('edit_entry.html', entry=entry)
-
 if __name__ == '__main__':
-    import os
+    # Initialize the database
     init_db()
-    port = int(os.environ.get('PORT', 10000))  # Render sets PORT env var
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # Only for development: enable debug mode and hot reloading
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

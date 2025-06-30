@@ -330,10 +330,10 @@
                         {% for tx in transactions %}
                         <div class="flex justify-between items-center py-3 border-b border-gray-100{% if loop.last %} border-b-0{% endif %}">
                             <span class="text-sm text-gray-600 font-medium">{{ tx[0] }}</span>
-                            <span class="font-bold {% if tx[1] >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
-                                {% if tx[1] >= 0 %}+{% endif %}${{ tx[1]|abs|round(2) }}
+                            <span class="font-bold {% if tx[2] == 'deposit' %}text-green-600{% else %}text-red-600{% endif %}">
+                                {% if tx[2] == 'deposit' %}+{% else %}-{% endif %}${{ tx[1]|abs|round(2) }}
                             </span>
-                            <span class="text-sm text-gray-800 font-medium">{{ tx[3] }}</span>
+                            <span class="text-sm text-gray-800 font-medium">{{ tx[2]|capitalize }} - {{ tx[3] }}</span>
                         </div>
                         {% endfor %}
                         {% else %}
@@ -365,30 +365,29 @@
                 <section class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200/50">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">This Month's Budget</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200/50">
-                            <h4 class="font-bold text-gray-800 mb-3">Utilities</h4>
-                            <div class="progress-container w-full bg-gray-200 rounded-full h-3 mb-3">
-                                <div class="progress-fill h-3 rounded-full" style="width: 0%"></div>
+                        {% if budget_overview and budget_overview|length > 0 %}
+                            {% for budget in budget_overview %}
+                            <div class="p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200/50">
+                                <h4 class="font-bold text-gray-800 mb-3">{{ budget[0] }}</h4>
+                                <div class="progress-container w-full bg-gray-200 rounded-full h-3 mb-3">
+                                    {% if budget[3] > 100 %}
+                                        <div class="progress-fill h-3 rounded-full" style="width: {{ budget[3]|round(1) ~ '%' }}; background: linear-gradient(90deg, #ef4444, #dc2626);"></div>
+                                    {% else %}
+                                        <div class="progress-fill h-3 rounded-full" style="width: {{ budget[3]|round(1) ~ '%' }};"></div>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 font-medium">${{ budget[2]|round(2) }} / ${{ budget[1]|round(2) }}</p>
                             </div>
-                            <p class="text-sm text-gray-600 font-medium">$0 / $1,000</p>
+                            {% endfor %}
+                        {% else %}
+                        <div class="text-center text-gray-500 py-8 col-span-2">
+                            <div class="text-4xl mb-3">💸</div>
+                            <p class="text-lg font-medium">No budget data for this month.</p>
                         </div>
-                        <div class="p-5 bg-gradient-to-r from-gray-50 to-green-50 rounded-xl border border-gray-200/50">
-                            <h4 class="font-bold text-gray-800 mb-3">Food</h4>
-                            <div class="progress-container w-full bg-gray-200 rounded-full h-3 mb-3">
-                                <div class="progress-fill h-3 rounded-full" style="width: 0%"></div>
-                            </div>
-                            <p class="text-sm text-gray-600 font-medium">$0 / $1,000</p>
-                        </div>
-                        <div class="p-5 bg-gradient-to-r from-gray-50 to-purple-50 rounded-xl border border-gray-200/50">
-                            <h4 class="font-bold text-gray-800 mb-3">Shopping</h4>
-                            <div class="progress-container w-full bg-gray-200 rounded-full h-3 mb-3">
-                                <div class="progress-fill h-3 rounded-full" style="width: 0%"></div>
-                            </div>
-                            <p class="text-sm text-gray-600 font-medium">$0 / $2,000</p>
-                        </div>
+                        {% endif %}
                     </div>
                     <div class="mt-6">
-                        <a href="#" class="text-primary hover:text-blue-600 text-sm font-semibold">View Full Budget →</a>
+                        <a href="{{ url_for('view_budget') }}" class="text-primary hover:text-blue-600 text-sm font-semibold">View Full Budget →</a>
                     </div>
                 </section>
             </main>

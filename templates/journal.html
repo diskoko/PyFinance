@@ -553,54 +553,102 @@
 
         // AJAX for journal entry form
         const journalForm = document.getElementById('journalForm');
-        journalForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(journalForm);
-            const response = await fetch(journalForm.action, {
-                method: 'POST',
-                body: formData
-            });
-            if (response.ok) {
-                const newEntry = await response.json();
-                addEntryToList(newEntry);
-                journalForm.reset();
-                document.getElementById('title').focus();
-            } else {
-                alert('Failed to add entry.');
-            }
-        });
+journalForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(journalForm);
+    const response = await fetch(journalForm.action, {
+        method: 'POST',
+        body: formData
+    });
+    if (response.ok) {
+        const newEntry = await response.json();
+        addEntryToList(newEntry);
+        journalForm.reset();
+        document.getElementById('title').focus();
+        showNotification('Entry saved successfully!', 'success');
+    } else {
+        alert('Failed to add entry.');
+    }
+});
 
-        function addEntryToList(entry) {
-            const entriesList = document.querySelector('.space-y-4');
-            // Remove 'no entries' card if present
-            const noEntries = entriesList.querySelector('.bg-white.p-12');
-            if (noEntries) noEntries.remove();
-            // Create new entry card
-            const div = document.createElement('div');
-            div.className = 'bg-white rounded-lg p-6 hover:shadow-lg transition-all duration-200 entry-item border border-gray-200/50 mb-4';
-            div.id = `entry-${entry.id}`;
-            div.style.opacity = 0;
-            div.innerHTML = `
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span class="text-lg">📝</span>
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-gray-900 text-lg">${entry.title}</h3>
-                            <p class="text-sm text-gray-500">${entry.date}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="editEntry(${entry.id})" type="button" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">Edit</button>
-                        <button onclick="deleteEntry(${entry.id})" type="button" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">Delete</button>
-                    </div>
+function addEntryToList(entry) {
+    // Find the recent entries container (the last div with journal entries)
+    const recentEntriesContainer = document.querySelector('.bg-white\\/80.backdrop-blur-sm.rounded-xl.shadow-sm.p-6.border.border-gray-200\\/50:last-child');
+    
+    // Look for existing entries or the "no entries" message
+    const noEntriesMessage = recentEntriesContainer.querySelector('.bg-white.p-12.text-center');
+    const existingEntries = recentEntriesContainer.querySelectorAll('.entry-item');
+    
+    // Remove 'no entries' message if present
+    if (noEntriesMessage) {
+        noEntriesMessage.remove();
+    }
+    
+    // Create new entry card
+    const div = document.createElement('div');
+    div.className = 'bg-white rounded-lg p-6 hover:shadow-lg transition-all duration-200 entry-item border border-gray-200/50 mb-4 entry-animation';
+    div.id = `entry-${entry.id}`;
+    div.innerHTML = `
+        <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span class="text-lg">📝</span>
                 </div>
-                <div class="text-gray-700 leading-relaxed whitespace-pre-line pl-13">${entry.content}</div>
-            `;
-            entriesList.insertBefore(div, entriesList.children[1]);
-            setTimeout(() => { div.style.transition = 'opacity 0.5s'; div.style.opacity = 1; }, 10);
-        }
+                <div>
+                    <h3 class="font-semibold text-gray-900 text-lg">${entry.title}</h3>
+                    <p class="text-sm text-gray-500">${entry.formatted_date || entry.date}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="editEntry('${entry.id}')" type="button" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">
+                    Edit
+                </button>
+                <button onclick="deleteEntry('${entry.id}')" type="button" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+        <div class="text-gray-700 leading-relaxed whitespace-pre-line pl-13">${entry.content}</div>
+    `;
+    
+    // Find the h2 heading "Recent Entries" and insert after it
+    const recentEntriesHeading = recentEntriesContainer.querySelector('h2');
+    if (recentEntriesHeading) {
+        // Insert right after the heading
+        recentEntriesHeading.insertAdjacentElement('afterend', div);
+    } else {
+        // Fallback: append to the container
+        recentEntriesContainer.appendChild(div);
+    }
+    
+    // Update the entry count in the heading
+    updateEntryCount();
+}
+
+function updateEntryCount() {
+    const entryCountElement = document.querySelector('h2 span');
+    const currentEntries = document.querySelectorAll('.entry-item');
+    if (entryCountElement) {
+        entryCountElement.textContent = `(${currentEntries.length} total)`;
+    }
+    
+    // Update sidebar count
+    const sidebarEntryCount = document.getElementById('entryCount');
+    if (sidebarEntryCount) {
+        sidebarEntryCount.textContent = currentEntries.length;
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
     </script>
 </body>
 </html>
