@@ -169,11 +169,11 @@
                     💰 Financial Dashboard
                 </h1>
                 <div class="flex gap-3">
-                    <button onclick="showAddExpenseModal()" 
+                    <button onclick="window.location.href='{{ url_for('add_expense') }}'" 
                        class="quick-action-btn bg-success text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-green-600 transition-colors flex items-center gap-2 text-sm">
                         ➕ Add Expense
                     </button>
-                    <button onclick="showAddBudgetModal()" 
+                    <button onclick="window.location.href='{{ url_for('add_budget') }}'" 
                        class="quick-action-btn bg-primary text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm">
                         ➕ Add Budget
                     </button>
@@ -295,7 +295,14 @@
                                     <span>Due: {{ goal[4] }}</span>
                                 </div>
                                 <div class="progress-container w-full bg-gray-200 rounded-full h-3">
-                                    <div class="progress-fill h-3 rounded-full" style="width: {{ (goal[3]/goal[2]*100)|round(1) }}%"></div>
+                                    {% set percent = (goal[3]/goal[2]*100) %}
+                                    {% if percent < 0 or percent > 120 %}
+                                        <div class="progress-fill h-3 rounded-full" style="width: 100%; background: linear-gradient(90deg, #ef4444, #dc2626);"></div>
+                                    {% elif percent > 100 %}
+                                        <div class="progress-fill h-3 rounded-full" style="width: {{ percent|round(1) ~ '%' }}; background: #f59e0b;"></div>
+                                    {% else %}
+                                        <div class="progress-fill h-3 rounded-full" style="width: {{ percent|round(1) ~ '%' }};"></div>
+                                    {% endif %}
                                 </div>
                                 <div class="text-sm text-gray-600 mt-2 font-medium">${{ goal[3]|round(2) }} / ${{ goal[2]|round(2) }} ({{ (goal[3]/goal[2]*100)|round(1) }}%)</div>
                             </div>
@@ -345,21 +352,7 @@
                     </div>
                 </section>
                 
-                <!-- Financial Health Overview -->
-                <section class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 mb-6 border border-gray-200/50">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Financial Health Score</h2>
-                    <div class="flex items-center gap-6">
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-primary mb-2">0%</div>
-                            <div class="text-sm text-gray-600 font-medium">Goals Progress</div>
-                        </div>
-                        <div class="flex-1">
-                            <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl">
-                                <span class="font-semibold">🚨 Time to focus on your financial goals!</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+           
                 
                 <!-- Budget Overview -->
                 <section class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200/50">
@@ -370,10 +363,13 @@
                             <div class="p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200/50">
                                 <h4 class="font-bold text-gray-800 mb-3">{{ budget[0] }}</h4>
                                 <div class="progress-container w-full bg-gray-200 rounded-full h-3 mb-3">
-                                    {% if budget[3] > 100 %}
-                                        <div class="progress-fill h-3 rounded-full" style="width: {{ budget[3]|round(1) ~ '%' }}; background: linear-gradient(90deg, #ef4444, #dc2626);"></div>
+                                    {% set percent = budget[3] %}
+                                    {% if percent < 0 or percent > 120 %}
+                                        <div class="progress-fill h-3 rounded-full" style="width: 100%; background: linear-gradient(90deg, #ef4444, #dc2626);"></div>
+                                    {% elif percent > 100 %}
+                                        <div class="progress-fill h-3 rounded-full" style="width: {{ percent|round(1) ~ '%' }}; background: #f59e0b;"></div>
                                     {% else %}
-                                        <div class="progress-fill h-3 rounded-full" style="width: {{ budget[3]|round(1) ~ '%' }};"></div>
+                                        <div class="progress-fill h-3 rounded-full" style="width: {{ percent|round(1) ~ '%' }};"></div>
                                     {% endif %}
                                 </div>
                                 <p class="text-sm text-gray-600 font-medium">${{ budget[2]|round(2) }} / ${{ budget[1]|round(2) }}</p>
@@ -399,7 +395,7 @@
         // Calendar variables
         const currentDate = new Date();
         let selectedDate = new Date();
-        const entryDays = [30]; // Sample entry days
+        // const entryDays = [30]; // Sample entry days (temporarily removed for dashboard calendar)
 
         // Show notification function
         function showNotification(type, message) {
@@ -465,9 +461,9 @@
                 }
                 
                 // Highlight days with entries
-                if (entryDays.includes(i)) {
-                    dayElement.classList.add('entry-day');
-                }
+                // if (entryDays.includes(i)) {
+                //     dayElement.classList.add('entry-day');
+                // }
                 
                 dayElement.onclick = () => selectDate(i);
                 daysContainer.appendChild(dayElement);

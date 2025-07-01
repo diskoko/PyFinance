@@ -465,7 +465,9 @@
         // Calendar variables
         const currentDate = new Date();
         let selectedDate = new Date();
-        const entryDays = [];
+        // Dynamically set entryDays from Flask context
+        const entryDays = {{ entry_days|tojson|safe }};
+        console.log('entryDays for calendar:', entryDays); // DEBUG: See what is passed from Flask
 
         function renderCalendar() {
             const monthYearDisplay = document.getElementById('monthYear');
@@ -497,8 +499,8 @@
                     dayElement.classList.add('current-day');
                 }
 
-                // Highlight days with entries
-                if (entryDays.includes(i)) {
+                // Highlight days with entries - check if this day has entries
+                if (entryDays && entryDays.includes(i)) {
                     dayElement.classList.add('has-entry');
                 }
 
@@ -518,12 +520,31 @@
 
         function prevMonth() {
             selectedDate.setMonth(selectedDate.getMonth() - 1);
+            updateEntryDaysForMonth();
             renderCalendar();
         }
 
         function nextMonth() {
             selectedDate.setMonth(selectedDate.getMonth() + 1);
+            updateEntryDaysForMonth();
             renderCalendar();
+        }
+
+        function updateEntryDaysForMonth() {
+            // For now, we'll only show entries for the current month as passed from Flask
+            // In a full implementation, you'd fetch entries for the selected month via AJAX
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const selectedMonth = selectedDate.getMonth();
+            const selectedYear = selectedDate.getFullYear();
+            
+            // Only show entry days if we're viewing the current month
+            if (selectedMonth === currentMonth && selectedYear === currentYear) {
+                // entryDays is already set from Flask for current month
+            } else {
+                // Clear entry days for other months (would need AJAX to fetch real data)
+                // For now, we'll leave entryDays as is since we don't have data for other months
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -623,6 +644,14 @@ function addEntryToList(entry) {
     
     // Update the entry count in the heading
     updateEntryCount();
+    
+    // Update calendar to show new entry day
+    const today = new Date();
+    const todayDay = today.getDate();
+    if (!entryDays.includes(todayDay)) {
+        entryDays.push(todayDay);
+        renderCalendar(); // Re-render calendar to show the new entry day
+    }
 }
 
 function updateEntryCount() {

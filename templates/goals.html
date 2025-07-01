@@ -160,6 +160,16 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
+
+        @keyframes stripes {
+            0% { background-position: 200% 0; }
+            100% { background-position: 0 0; }
+        }
+
+        .bg-stripes {
+            background-size: 40px 40px;
+            animation: stripes 0.8s linear infinite;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
@@ -292,8 +302,16 @@
                                         <span class="text-sm font-medium text-gray-700">Progress</span>
                                         <span class="text-sm font-bold text-blue-600">{{ (goal[3]/goal[2]*100)|round(1) }}%</span>
                                     </div>
+                                    {% set progress = (goal[3]/goal[2]*100) %}
+                                    {% if progress < 0 or progress > 120 %}
+                                        {% set bar_style = 'width:100%;background:#ef4444;' %}
+                                    {% elif progress > 100 %}
+                                        {% set bar_style = 'width:' ~ progress|round(1) ~ '%;background:#f59e0b;' %}
+                                    {% else %}
+                                        {% set bar_style = 'width:' ~ progress|round(1) ~ '%;' %}
+                                    {% endif %}
                                     <div class="progress-container w-full bg-gray-200 rounded-full h-3">
-                                        <div class="progress-fill h-3 rounded-full" style="width: {{ (goal[3]/goal[2]*100)|round(1) }}%"></div>
+                                        <div class="progress-fill h-3 rounded-full" style="{{ bar_style }}"></div>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4 text-sm mb-4">

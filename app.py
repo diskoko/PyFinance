@@ -501,8 +501,38 @@ def delete_goal(goal_id):
         cursor = conn.cursor()
         cursor.execute("DELETE FROM financial_goals WHERE id = ?", (goal_id,))
         cursor.execute("DELETE FROM transactions WHERE goal_id = ?", (goal_id,))
+        
         conn.commit()
     return redirect(url_for('view_goals'))
+
+@app.route('/delete_entry/<int:entry_id>', methods=['POST'])
+def delete_entry(entry_id):
+    """Delete a journal entry by ID"""
+    with sqlite3.connect('finance.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM journal WHERE id = ?", (entry_id,))
+        conn.commit()
+    return redirect(url_for('view_journal'))
+
+@app.route('/edit_entry/<int:entry_id>', methods=['GET', 'POST'])
+def edit_entry(entry_id):
+    """Edit a journal entry by ID"""
+    with sqlite3.connect('finance.db') as conn:
+        cursor = conn.cursor()
+        if request.method == 'POST':
+            title = request.form['title']
+            content = request.form['content']
+            date = request.form['date']
+            cursor.execute("""
+                UPDATE journal SET title = ?, content = ?, date = ?
+                WHERE id = ?
+            """, (title, content, date, entry_id))
+            conn.commit()
+            return redirect(url_for('view_journal'))
+        else:
+            cursor.execute("SELECT id, title, content, date FROM journal WHERE id = ?", (entry_id,))
+            entry = cursor.fetchone()
+    return render_template('edit_entry.html', entry=entry)
 
 if __name__ == '__main__':
     # Initialize the database
